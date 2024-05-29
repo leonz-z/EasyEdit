@@ -557,11 +557,22 @@ def test_safety_gen(
         tokenizer, 
         test_prompt, 
         cuda, 
-        max_output_tokens=600):
+        max_output_tokens=600,
+        max_length=2048):
     tokenizer.padding_side = 'left'
     input = tokenizer(test_prompt, return_tensors="pt", padding=True, truncation=True).to(f"cuda:{cuda}")
+    # cjc@0529: fix bug when input_length+generated_length > max_length(llm max context length)
+    if input['input_ids'].shape[1] + max_output_tokens > max_length:
+        print(f'Warning: input_length({input["input_ids"].shape[1]})+generated_length({max_output_tokens}) > max_length({max_length})')
     with torch.no_grad():
-        outputs = model.generate(**input, max_new_tokens=max_output_tokens)
+        try:
+            outputs = model.generate(**input, max_new_tokens=max_output_tokens)
+        except RuntimeError:
+            print(f'Warning: input_length{input["input_ids"].shape[1]} is cut off to max_length-max_output_tokens({max_length-max_output_tokens})')
+            print('Attention: This is not good for SafeEdit Task.Just for correct running.')
+            input['input_ids'] = input['input_ids'][:, :max_length-max_output_tokens]
+            input['attention_mask'] = input['attention_mask'][:, :max_length-max_output_tokens]
+            outputs = model.generate(**input, max_new_tokens=max_output_tokens)
         texts = [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
         only_response = [out[len(test_prompt[index])+2:] for index, out in enumerate(texts)]
     return only_response

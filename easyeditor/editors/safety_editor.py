@@ -8,6 +8,7 @@ import random
 from ..models.melo.melo import LORA
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
 from transformers import LlamaTokenizer, LlamaForCausalLM
+from transformers import GPT2TokenizerFast, GPT2Tokenizer, GPT2LMHeadModel
 from ..util.globals import *
 from ..evaluate import compute_safety_edit_quality
 from ..util import nethook
@@ -66,7 +67,14 @@ class SafetyEditor:
 
         if type(self.model_name) is str:
             device_map = 'auto' if hparams.model_parallel else None
-            torch_dtype = torch.float16 if hasattr(hparams, 'fp16') and hparams.fp16 else torch.float32
+            # cjc@0529: add torch_dtype bf16 support
+            if hasattr(hparams, 'fp16') and hparams.fp16:
+                torch_dtype = torch.float16
+            elif hasattr(hparams, 'bf16') and hparams.bf16:
+                print("Warning: Please make sure your GPU and LLM supports bfloat16.")
+                torch_dtype = torch.bfloat16
+            else:
+                torch_dtype = torch.float32
             
             if 'llama' in self.model_name.lower():
                 self.model = LlamaForCausalLM.from_pretrained(self.model_name, output_hidden_states=True, torch_dtype=torch_dtype, device_map=device_map)
@@ -76,6 +84,13 @@ class SafetyEditor:
                 self.model = AutoModelForCausalLM.from_pretrained(self.model_name, output_hidden_states=True, torch_dtype=torch_dtype, device_map=device_map)
                 self.tok = AutoTokenizer.from_pretrained(self.model_name)
                 self.tok.pad_token_id = self.tok.eos_token_id 
+            elif 'gpt' in self.model_name.lower():  # cjc@0528: add gpt series models support
+                self.model = GPT2LMHeadModel.from_pretrained(self.model_name, output_hidden_states=True, torch_dtype=torch_dtype, device_map=device_map)
+                self.tok = GPT2TokenizerFast.from_pretrained(self.model_name)
+                self.tok.pad_token_id = self.tok.eos_token_id
+            elif 'qwen' in self.model_name.lower():  # cjc@0528: add qwen series models support
+                self.model = AutoModelForCausalLM.from_pretrained(self.model_name, output_hidden_states=True, torch_dtype=torch_dtype, trust_remote_code=True, device_map=device_map)
+                self.tok = AutoTokenizer.from_pretrained(self.model_name, eos_token='<|endoftext|>', pad_token='<|endoftext|>', unk_token='<|endoftext|>', trust_remote_code=True)
             else:
                 raise NotImplementedError
         else:

@@ -61,7 +61,12 @@ class BaseEditor:
 
         if type(self.model_name) is str:
             device_map = 'auto' if hparams.model_parallel else None
-            torch_dtype = torch.float16 if hasattr(hparams, 'fp16') and hparams.fp16 else torch.float32
+            if hasattr(hparams, 'fp16') and hparams.fp16:
+                torch_dtype = torch.float16
+            elif hasattr(hparams, 'bf16') and hparams.bf16:
+                torch_dtype = torch.bfloat16
+            else:
+                torch_dtype = torch.float32
             if 't5' in self.model_name.lower():
                 self.model = T5ForConditionalGeneration.from_pretrained(self.model_name, torch_dtype=torch_dtype, device_map=device_map)
                 self.tok = T5Tokenizer.from_pretrained(self.model_name)
@@ -133,7 +138,7 @@ class BaseEditor:
         `locality_inputs`: dict
             for locality
         """
-        test_generation = kwargs['test_generation'] if 'test_generation' in kwargs.keys() else False
+        # test_generation = kwargs['test_generation'] if 'test_generation' in kwargs.keys() else False
         if isinstance(prompts, List):
             assert len(prompts) == len(target_new)
         else:
@@ -151,8 +156,9 @@ class BaseEditor:
             requests = kwargs["requests"]
         else:
             requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts, locality_inputs, portability_inputs, **kwargs)
-
-        return self.edit_requests(requests, sequential_edit, verbose, test_generation=test_generation, **kwargs)
+        # **kwargs包含test_generation fix bug cjc@0529
+        # return self.edit_requests(requests, sequential_edit, verbose, test_generation=test_generation, **kwargs)
+        return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
 
     def batch_edit(self,
                    prompts: List[str],

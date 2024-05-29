@@ -1,10 +1,10 @@
 alg_name: "LoRA"
-model_name: "/share/huggingface/gpt2-xl"
+model_name: "/share/huggingface/Llama-2-7b-ms"
 device: 0
-lora_type: "adalora"
+model_parallel: false
 layers: []
 num_steps: 30
-batch_size: 1
+batch_size: 20
 max_length: 30
 lr: 5e-3
 weight_decay: 0
@@ -13,5 +13,4 @@ rank: 16
 lora_alpha: 32
 lora_dropout: 0.1
 norm_constraint: false
-target_modules: ["c_fc","c_proj"]  # attn:c_attn c_proj mlp:c_fc c_proj
-model_parallel: false
+target_modules: ["q_proj", "v_proj"]  #["up_proj", "down_proj"] #["q_proj", "v_proj"]
