@@ -1,7 +1,7 @@
 import os
 import os.path
 import sys
-# sys.path.append('..')
+sys.path.append('..')
 import numpy as np
 import hydra
 from easyeditor import (
@@ -35,6 +35,7 @@ def write_json(path, data, case_id = None, data_all = None):
         with open(path, 'w') as file:
             json.dump(data, file, indent=4)
     else:
+        # TODO: test data文件有100条数据,safe edit后的文件有150条数据?
         with open(path, 'a') as file:
             if case_id[0] == 0:
                 file.write("[")
@@ -181,7 +182,8 @@ if __name__ == '__main__':
     
     detoxify_metric = ["DS", "DG_onlyQ", "DG_otherA", "DG_otherQ", "DG_otherAQ"]
 
-    edit_data_all = SafetyDataset(f'{args.data_dir}/SafeEdit_test.json')
+    # edit_data_all = SafetyDataset(f'{args.data_dir}/SafeEdit_test.json')
+    edit_data_all = SafetyDataset(args.data_dir)
     hparams = editing_hparams.from_hparams(args.hparams_dir)
 
     # classifier
@@ -191,6 +193,8 @@ if __name__ == '__main__':
     editor = SafetyEditor.from_hparams(hparams)
     # edit_data_all = edit_data_all[0:2]
     if args.editing_method == "DINM":
+        overall_performance = test_DINM(edit_data_all, editor, hparams, safety_classifier_model, safety_classifier_tokenizer, detoxify_metric, output_dir)
+    elif args.editing_method == "MEND":
         overall_performance = test_DINM(edit_data_all, editor, hparams, safety_classifier_model, safety_classifier_tokenizer, detoxify_metric, output_dir)
     else:
         print("This method is currently not supported")

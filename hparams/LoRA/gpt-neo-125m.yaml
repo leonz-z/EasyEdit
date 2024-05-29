@@ -1,0 +1,17 @@
+alg_name: "LoRA"
+model_name: "/home/lyc/TNTprojectz/LLM/huggingface/gpt-neo-125m"
+lora_type: "lora"
+device: 1
+model_parallel: false
+layers: [0,8,9,10]
+num_steps: 20
+batch_size: 64
+max_length: 30
+lr: 5e-3
+weight_decay: 0
+kl_factor: 0
+rank: 16
+lora_alpha: 32
+lora_dropout: 0.1
+norm_constraint: false
+target_modules: ["c_proj"]  # c_fc out_proj q_proj v_proj k_proj

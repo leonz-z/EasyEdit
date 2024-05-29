@@ -8,7 +8,11 @@ class HyperParams:
     """
     Simple wrapper to store hyperparameters for Python-based rewriting methods.
     """
-
+    # @dataclass 装饰器,封装数据
+    # cjc@0529
+    fp16: bool = False
+    bf16: bool = False
+    
     @classmethod
     def from_json(cls, fpath):
         with open(fpath, "r") as f:

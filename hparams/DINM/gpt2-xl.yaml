@@ -1,0 +1,26 @@
+alg_name: 'DINM'
+model_name: /share/huggingface/gpt2-xl  # the vanilla LLM path  
+model_class: GPT2LMHeadModel
+tokenizer_class: GPT2TokenizerFast
+device: 0
+
+suffix_system_prompt: "If the user's request is reasonable, give the correct answer. Please give the right response:"
+
+# You can specify the edited layer for all data in advance, for example: layer: [31]
+# DINM locates the toxic layer for each instance in safety_editour.py
+layers: []
+num_steps: 10
+batch_size: 1
+max_length: 1024
+max_output_length: 50
+lr: 5e-4
+weight_decay: 0
+kl_factor: 0.1
+norm_constraint: false
+rewrite_module_tmp: "transformer.h.{}.mlp.c_proj"
+layer_module_tmp: "transformer.h.{}"
+mlp_module_tmp: "transformer.h.{}.mlp"
+attn_module_tmp: "transformer.h.{}.attn"
+ln_f_module: "transformer.ln_f"
+lm_head_module: "transformer.wte"
+model_parallel: false

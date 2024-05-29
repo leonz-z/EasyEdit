@@ -1,5 +1,5 @@
-alg_name: "GRACE"
-model_name: "./hugging_cache/gpt2-xl"
+alg_name: GRACE
+model_name: gpt2-xl
 device: 0
 
 inner_params:

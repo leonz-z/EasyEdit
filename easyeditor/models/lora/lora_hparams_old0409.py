@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from typing import List
-import yaml
-
 from ...util.hparams import HyperParams
+import yaml
 
 
 @dataclass
-class DINMHyperParams(HyperParams):
+class LoRAHyperParams(HyperParams):
+    # Path
+    data_path: str
+    data_file: str
     # Method
     layers: List[int]
     num_steps: int
@@ -14,36 +16,23 @@ class DINMHyperParams(HyperParams):
     weight_decay: float
     kl_factor: float
     norm_constraint: float
-    model_class: str
-    tokenizer_class: str
-    suffix_system_prompt: str
-
+    target_modules: List[str]
+    rank: int
+    lora_alpha: float
+    lora_dropout: float
     # Module templates
-    rewrite_module_tmp: str
-    layer_module_tmp: str
-    mlp_module_tmp: str
-    attn_module_tmp: str
-    ln_f_module: str
-    lm_head_module: str
     device: int
     alg_name: str
     model_name: str
-    # safety_classifier: str
-    # objective_optimization: str
-
+    torch_dtype: str = "bfloat16"
+    load_in_8bit: bool = False
     # Defaults
-    batch_size: int = 1
-    max_length: int = 1000
-    max_output_length: int = 600
+    batch_size: int = 128
+    max_length: int = 40
     model_parallel: bool = False
-    
-    # cjc@0528
-    bf16 : bool = True
-    fp16 : bool = False
-
+    CUDA_VISIBLE_DEVICES: str = "2,3"
     @classmethod
     def from_hparams(cls, hparams_name_or_path: str):
-
         if '.yaml' not in hparams_name_or_path:
             hparams_name_or_path = hparams_name_or_path + '.yaml'
 
@@ -51,6 +40,7 @@ class DINMHyperParams(HyperParams):
             config = yaml.safe_load(stream)
             config = super().construct_float_from_scientific_notation(config)
 
-        assert (config and config['alg_name'] == 'DINM') or print(f'DINMHyperParams can not load from {hparams_name_or_path}, '
-                                                f'alg_name is {config["alg_name"]} ')
+        assert (config and config['alg_name'] == 'LoRA') or print(
+            f'LoRAHyperParams can not load from {hparams_name_or_path}, '
+            f'alg_name is {config["alg_name"]} ')
         return cls(**config)
