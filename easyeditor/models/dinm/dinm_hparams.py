@@ -37,10 +37,6 @@ class DINMHyperParams(HyperParams):
     max_output_length: int = 600
     model_parallel: bool = False
     
-    # cjc@0528
-    bf16 : bool = True
-    fp16 : bool = False
-
     @classmethod
     def from_hparams(cls, hparams_name_or_path: str):
 
