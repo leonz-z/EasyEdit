@@ -6,7 +6,7 @@ DATA_TEST=recent_test
 DATA_TRAIN=recent_train
 DATA_TYPE=recent
 NUM=1
-
+# test
 CUDA_VISIBLE_DEVICES=2 nohup python run_knowedit_llama2.py \
     --editing_method $EDIT_METHOD \
     --hparams_dir ../hparams/$EDIT_METHOD/$MODEL \
