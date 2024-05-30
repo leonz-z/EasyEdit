@@ -6,7 +6,7 @@ model_parallel: false
 lr_scale: 1.0
 n_toks: 10
 refine: false
-batch_size: 20 # 一次只能编辑一个,batch_size有什么用?
+batch_size: 1 # 一次只能编辑一个,batch_size有什么用? 0530 batch_size: 20
 steps: 20 # 直接修改知识神经元的值,重复20steps有什么用?
 adaptive_threshold: 0.2
 p: 0.4

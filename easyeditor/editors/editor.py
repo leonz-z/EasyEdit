@@ -1,3 +1,4 @@
+import os
 from typing import Optional, Union, List, Tuple, Dict
 from time import time
 from tqdm import tqdm
@@ -60,6 +61,12 @@ class BaseEditor:
         LOG.info("Instantiating model")
 
         if type(self.model_name) is str:
+            # add: use HUGGINGFACE_CACHE golbal variable
+            huggingface_cache = os.environ.get('HUGGINGFACE_CACHE')
+            if huggingface_cache:
+                self.model_name = os.path.join(huggingface_cache, self.model_name)
+                print(f"Using Huggingface cache: {self.model_name}")
+            # set device
             device_map = 'auto' if hparams.model_parallel else None
             if hasattr(hparams, 'fp16') and hparams.fp16:
                 torch_dtype = torch.float16
@@ -67,6 +74,7 @@ class BaseEditor:
                 torch_dtype = torch.bfloat16
             else:
                 torch_dtype = torch.float32
+            # load model and tokenizer
             if 't5' in self.model_name.lower():
                 self.model = T5ForConditionalGeneration.from_pretrained(self.model_name, torch_dtype=torch_dtype, device_map=device_map)
                 self.tok = T5Tokenizer.from_pretrained(self.model_name)

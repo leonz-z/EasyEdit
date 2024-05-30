@@ -8,10 +8,11 @@ class HyperParams:
     """
     Simple wrapper to store hyperparameters for Python-based rewriting methods.
     """
-    # @dataclass 装饰器,封装数据
-    # cjc@0529
-    fp16: bool = False
-    bf16: bool = False
+    # cjc@0529 @dataclass 装饰器,封装数据
+    # cjc@0530 fix bug: TypeError: non-default argument 'model_name' follows default argument
+    # cjc@0530 TypeError: __init__() missing 2 required positional arguments: 'fp16' and 'bf16'
+    # fp16: bool
+    # bf16: bool
     
     @classmethod
     def from_json(cls, fpath):
