@@ -21,6 +21,7 @@ export HUGGINGFACE_CACHE=/home/bingxing2/public/models/llama2 # A100
 module load compilers/cuda/11.8
 module load cudnn/8.8.1.3_cuda11.x
 module load compilers/gcc/12.2.0
+source ~/.bashrc
 conda activate ke
 # DATA_TEST=ZsRE-test-all
 # DATA_TYPE=zsre
