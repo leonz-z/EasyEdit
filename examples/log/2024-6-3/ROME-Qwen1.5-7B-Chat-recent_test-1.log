@@ -1,0 +1,18 @@
+2024-06-03 23:19:45,201 - easyeditor.editors.editor - INFO - Instantiating model
+06/03/2024 23:19:45 - INFO - easyeditor.editors.editor -   Instantiating model
+/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data
+['/home/bingxing2/home/scx7avs/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/share/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/nltk_data', '/usr/share/nltk_data', '/usr/local/share/nltk_data', '/usr/lib/nltk_data', '/usr/local/lib/nltk_data', '/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data']
+./Qwen1.5-7B-Chat_recent_pre_edit.json
+Using Huggingface cache: /home/bingxing2/public/models/Qwen/Qwen1.5-7B-Chat
+Traceback (most recent call last):
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/run_knowedit_llama2.py", line 207, in <module>
+    editor = BaseEditor.from_hparams(hparams)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/editors/editor.py", line 53, in from_hparams
+    return cls(hparams)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/editors/editor.py", line 105, in __init__
+    self.model = AutoModelForCausalLM.from_pretrained(self.model_name,fp32=False,trust_remote_code=True, device_map=device_map)
+  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 563, in from_pretrained
+    return model_class.from_pretrained(
+  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/modeling_utils.py", line 3550, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+TypeError: __init__() got an unexpected keyword argument 'fp32'
