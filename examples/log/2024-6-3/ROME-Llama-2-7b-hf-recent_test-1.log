@@ -1,54 +1,23 @@
+2024-06-03 15:21:52,257 - easyeditor.editors.editor - INFO - Instantiating model
+06/03/2024 15:21:52 - INFO - easyeditor.editors.editor -   Instantiating model
+./Llama-2-7b-hf_recent_pre_edit.json
+Using Huggingface cache: /home/bingxing2/public/models/llama2/Llama-2-7b-hf
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:00<00:00,  1.10it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.55it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.46it/s]
+/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:492: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
+  warnings.warn(
+/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
+  warnings.warn(
+/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:492: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`.
+  warnings.warn(
+/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`.
+  warnings.warn(
+2024-06-03 15:21:54,130 - easyeditor.editors.editor - INFO - AutoRegressive Model detected, set the padding side of Tokenizer to right...
+06/03/2024 15:21:54 - INFO - easyeditor.editors.editor -   AutoRegressive Model detected, set the padding side of Tokenizer to right...
 Traceback (most recent call last):
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sklearn/__check_build/__init__.py", line 48, in <module>
-    from ._check_build import check_build  # noqa
-ImportError: /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0: cannot allocate memory in static TLS block
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/run_knowedit_llama2.py", line 7, in <module>
-    from easyeditor import (
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/__init__.py", line 2, in <module>
-    from .editors import *
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/__init__.py", line 1, in <module>
-    from .editor import *
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 9, in <module>
-    from ..models.melo.melo import LORA
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/models/__init__.py", line 2, in <module>
-    from .ike import *
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/models/ike/__init__.py", line 1, in <module>
-    from .ike_main import IKEHyperParams, apply_ike_to_model
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/models/ike/ike_main.py", line 1, in <module>
-    from sentence_transformers import SentenceTransformer, util
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sentence_transformers/__init__.py", line 3, in <module>
-    from .datasets import SentencesDataset, ParallelSentencesDataset
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sentence_transformers/datasets/__init__.py", line 3, in <module>
-    from .ParallelSentencesDataset import ParallelSentencesDataset
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sentence_transformers/datasets/ParallelSentencesDataset.py", line 4, in <module>
-    from .. import SentenceTransformer
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sentence_transformers/SentenceTransformer.py", line 25, in <module>
-    from .evaluation import SentenceEvaluator
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sentence_transformers/evaluation/__init__.py", line 3, in <module>
-    from .BinaryClassificationEvaluator import BinaryClassificationEvaluator
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sentence_transformers/evaluation/BinaryClassificationEvaluator.py", line 5, in <module>
-    from sklearn.metrics.pairwise import paired_cosine_distances, paired_euclidean_distances, paired_manhattan_distances
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sklearn/__init__.py", line 81, in <module>
-    from . import __check_build  # noqa: F401
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sklearn/__check_build/__init__.py", line 50, in <module>
-    raise_build_error(e)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sklearn/__check_build/__init__.py", line 31, in raise_build_error
-    raise ImportError(
-ImportError: /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0: cannot allocate memory in static TLS block
-___________________________________________________________________________
-Contents of /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/sklearn/__check_build:
-_check_build.cpython-39-aarch64-linux-gnu.sosetup.py                  __init__.py
-__pycache__
-___________________________________________________________________________
-It seems that scikit-learn has not been built correctly.
-
-If you have installed scikit-learn from source, please do not forget
-to build the package before using it: run `python setup.py install` or
-`make` in the source directory.
-
-If you have used an installer, please check that it is suited for your
-Python version, your operating system and your platform.
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/run_knowedit_llama2.py", line 208, in <module>
+    metrics, edited_model, _ = editor.edit(
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 169, in edit
+    return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 270, in edit_requests
+    all_metrics = json.load(open(kwargs['pre_file'], 'r'))
+FileNotFoundError: [Errno 2] No such file or directory: './Llama-2-7b-hf_recent_pre_edit.json'
