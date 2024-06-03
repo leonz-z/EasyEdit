@@ -16,8 +16,9 @@ fi
 # MODEL=Llama-2-7b-ms # 3090
 # source activate EasyEdit
 # A100
-MODEL=Llama-2-7b-hf # A100
-export HUGGINGFACE_CACHE=/home/bingxing2/public/models/llama2 # A100
+# MODEL=Llama-2-7b-hf 
+MODEL=Llama-2-13b-hf 
+export HUGGINGFACE_CACHE=/home/bingxing2/public/models/llama2 
 module load compilers/cuda/11.8
 module load cudnn/8.8.1.3_cuda11.x
 module load compilers/gcc/12.2.0
