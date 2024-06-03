@@ -1,8 +1,10 @@
-2024-06-03 16:03:37,029 - easyeditor.editors.editor - INFO - Instantiating model
-06/03/2024 16:03:37 - INFO - easyeditor.editors.editor -   Instantiating model
+2024-06-03 18:15:54,705 - easyeditor.editors.editor - INFO - Instantiating model
+06/03/2024 18:15:54 - INFO - easyeditor.editors.editor -   Instantiating model
+/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data
+['/home/bingxing2/home/scx7avs/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/share/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/nltk_data', '/usr/share/nltk_data', '/usr/local/share/nltk_data', '/usr/lib/nltk_data', '/usr/local/lib/nltk_data', '/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data']
 ./Llama-2-7b-hf_recent_pre_edit.json
 Using Huggingface cache: /home/bingxing2/public/models/llama2/Llama-2-7b-hf
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.06s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.34it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.26it/s]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  4.85s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  2.93s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  3.22s/it]
 /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:492: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
   warnings.warn(
 /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
@@ -11,59 +13,6 @@ Using Huggingface cache: /home/bingxing2/public/models/llama2/Llama-2-7b-hf
   warnings.warn(
 /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`.
   warnings.warn(
-2024-06-03 16:03:40,809 - easyeditor.editors.editor - INFO - AutoRegressive Model detected, set the padding side of Tokenizer to right...
-06/03/2024 16:03:40 - INFO - easyeditor.editors.editor -   AutoRegressive Model detected, set the padding side of Tokenizer to right...
-  0%|          | 0/1266 [00:00<?, ?it/s]  0%|          | 0/1266 [00:07<?, ?it/s]
-Traceback (most recent call last):
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/run_knowedit_llama2.py", line 208, in <module>
-    metrics, edited_model, _ = editor.edit(
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 169, in edit
-    return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 278, in edit_requests
-    metrics = {"pre": compute_edit_quality(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)}
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate.py", line 93, in compute_edit_quality
-    ret['fluency'] = test_generation_quality(model=model,tok=tok,prefixes=rewrite_prompts if isinstance(rewrite_prompts,list) else [rewrite_prompts,], max_out_len=100, vanilla_generation=False)
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 194, in test_generation_quality
-    ngram_entropy = n_gram_entropy(gen_texts)
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 204, in n_gram_entropy
-    [compute_n_gram_entropy(txt) for txt in gen_texts]
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 204, in <listcomp>
-    [compute_n_gram_entropy(txt) for txt in gen_texts]
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 216, in compute_n_gram_entropy
-    fdist = compute_freq(sentence, n)
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 227, in compute_freq
-    tokens = nltk.word_tokenize(sentence)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/tokenize/__init__.py", line 129, in word_tokenize
-    sentences = [text] if preserve_line else sent_tokenize(text, language)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/tokenize/__init__.py", line 106, in sent_tokenize
-    tokenizer = load(f"tokenizers/punkt/{language}.pickle")
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/data.py", line 750, in load
-    opened_resource = _open(resource_url)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/data.py", line 876, in _open
-    return find(path_, path + [""]).open()
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/data.py", line 583, in find
-    raise LookupError(resource_not_found)
-LookupError: 
-**********************************************************************
-  Resource [93mpunkt[0m not found.
-  Please use the NLTK Downloader to obtain the resource:
-
-  [31m>>> import nltk
-  >>> nltk.download('punkt')
-  [0m
-  For more information see: https://www.nltk.org/data.html
-
-  Attempted to load [93mtokenizers/punkt/PY3/english.pickle[0m
-
-  Searched in:
-    - '/home/bingxing2/home/scx7avs/nltk_data'
-    - '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/nltk_data'
-    - '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/share/nltk_data'
-    - '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/nltk_data'
-    - '/usr/share/nltk_data'
-    - '/usr/local/share/nltk_data'
-    - '/usr/lib/nltk_data'
-    - '/usr/local/lib/nltk_data'
-    - ''
-**********************************************************************
-
+2024-06-03 18:16:02,069 - easyeditor.editors.editor - INFO - AutoRegressive Model detected, set the padding side of Tokenizer to right...
+06/03/2024 18:16:02 - INFO - easyeditor.editors.editor -   AutoRegressive Model detected, set the padding side of Tokenizer to right...
+  0%|          | 0/1266 [00:00<?, ?it/s]  0%|          | 1/1266 [00:07<2:38:03,  7.50s/it]  0%|          | 2/1266 [00:14<2:30:31,  7.15s/it]  0%|          | 3/1266 [00:20<2:18:29,  6.58s/it]  0%|          | 4/1266 [00:26<2:15:20,  6.43s/it]  0%|          | 5/1266 [00:33<2:20:19,  6.68s/it]  0%|          | 6/1266 [00:40<2:23:41,  6.84s/it]  1%|          | 7/1266 [00:47<2:23:45,  6.85s/it]  1%|          | 8/1266 [00:54<2:23:40,  6.85s/it]  1%|          | 9/1266 [01:00<2:19:06,  6.64s/it]  1%|          | 10/1266 [01:07<2:18:30,  6.62s/it]  1%|          | 11/1266 [01:14<2:21:13,  6.75s/it]  1%|          | 12/1266 [01:22<2:27:07,  7.04s/it]  1%|          | 13/1266 [01:28<2:25:49,  6.98s/it]  1%|          | 14/1266 [01:35<2:23:07,  6.86s/it]  1%|          | 15/1266 [01:43<2:32:12,  7.30s/it]  1%|▏         | 16/1266 [01:50<2:28:30,  7.13s/it]  1%|▏         | 17/1266 [01:57<2:26:09,  7.02s/it]  1%|▏         | 18/1266 [02:03<2:23:08,  6.88s/it]  2%|▏         | 19/1266 [02:10<2:24:55,  6.97s/it]  2%|▏         | 20/1266 [02:17<2:24:07,  6.94s/it]  2%|▏         | 21/1266 [02:24<2:24:48,  6.98s/it]  2%|▏         | 22/1266 [02:32<2:30:48,  7.27s/it]  2%|▏         | 23/1266 [02:40<2:34:24,  7.45s/it]  2%|▏         | 24/1266 [02:47<2:31:35,  7.32s/it]  2%|▏         | 25/1266 [02:55<2:31:32,  7.33s/it]  2%|▏         | 26/1266 [03:01<2:27:51,  7.15s/it]  2%|▏         | 27/1266 [03:08<2:27:12,  7.13s/it]  2%|▏         | 28/1266 [03:16<2:26:55,  7.12s/it]  2%|▏         | 29/1266 [03:22<2:25:19,  7.05s/it]  2%|▏         | 30/1266 [03:30<2:28:08,  7.19s/it]  2%|▏         | 31/1266 [03:37<2:28:08,  7.20s/it]  3%|▎         | 32/1266 [03:43<2:22:07,  6.91s/it]  3%|▎         | 33/1266 [03:50<2:21:43,  6.90s/it]  3%|▎         | 34/1266 [03:58<2:24:06,  7.02s/it]  3%|▎         | 35/1266 [04:05<2:25:29,  7.09s/it]  3%|▎         | 36/1266 [04:11<2:20:41,  6.86s/it]  3%|▎         | 37/1266 [04:18<2:20:38,  6.87s/it]  3%|▎         | 38/1266 [04:25<2:20:12,  6.85s/it]  3%|▎         | 39/1266 [04:31<2:18:01,  6.75s/it]  3%|▎         | 40/1266 [04:38<2:16:00,  6.66s/it]  3%|▎         | 41/1266 [04:44<2:13:35,  6.54s/it]  3%|▎         | 42/1266 [04:51<2:16:03,  6.67s/it]
