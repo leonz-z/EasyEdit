@@ -1,0 +1,3 @@
+[submodule "LLMKnowledgeEditDataset"]
+	path = LLMKnowledgeEditDataset
+	url = https://www.modelscope.cn/datasets/CaiJichang/LLMKnowledgeEditDataset.git

@@ -1,8 +1,16 @@
+#!/bin/bash
+
 DATE=2024-6-3
+
+# Ensure log directory exists
+if [ ! -d "log" ]; then
+    mkdir log
+fi
 # if log/$DATE does not exist, create it
 if [ ! -d "log/$DATE" ]; then
-    mkdir log/$DATE
+    mkdir "log/$DATE"
 fi
+
 # 3090
 # export HUGGINGFACE_CACHE=/share/huggingface/ # 3090
 # MODEL=Llama-2-7b-ms # 3090
