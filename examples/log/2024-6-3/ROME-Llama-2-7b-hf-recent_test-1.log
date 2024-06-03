@@ -1,8 +1,8 @@
-2024-06-03 15:21:52,257 - easyeditor.editors.editor - INFO - Instantiating model
-06/03/2024 15:21:52 - INFO - easyeditor.editors.editor -   Instantiating model
+2024-06-03 16:03:37,029 - easyeditor.editors.editor - INFO - Instantiating model
+06/03/2024 16:03:37 - INFO - easyeditor.editors.editor -   Instantiating model
 ./Llama-2-7b-hf_recent_pre_edit.json
 Using Huggingface cache: /home/bingxing2/public/models/llama2/Llama-2-7b-hf
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:00<00:00,  1.10it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.55it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.46it/s]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.06s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.34it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.26it/s]
 /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:492: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
   warnings.warn(
 /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
@@ -11,13 +11,59 @@ Using Huggingface cache: /home/bingxing2/public/models/llama2/Llama-2-7b-hf
   warnings.warn(
 /home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`.
   warnings.warn(
-2024-06-03 15:21:54,130 - easyeditor.editors.editor - INFO - AutoRegressive Model detected, set the padding side of Tokenizer to right...
-06/03/2024 15:21:54 - INFO - easyeditor.editors.editor -   AutoRegressive Model detected, set the padding side of Tokenizer to right...
+2024-06-03 16:03:40,809 - easyeditor.editors.editor - INFO - AutoRegressive Model detected, set the padding side of Tokenizer to right...
+06/03/2024 16:03:40 - INFO - easyeditor.editors.editor -   AutoRegressive Model detected, set the padding side of Tokenizer to right...
+  0%|          | 0/1266 [00:00<?, ?it/s]  0%|          | 0/1266 [00:07<?, ?it/s]
 Traceback (most recent call last):
   File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/run_knowedit_llama2.py", line 208, in <module>
     metrics, edited_model, _ = editor.edit(
   File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 169, in edit
     return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 270, in edit_requests
-    all_metrics = json.load(open(kwargs['pre_file'], 'r'))
-FileNotFoundError: [Errno 2] No such file or directory: './Llama-2-7b-hf_recent_pre_edit.json'
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/editors/editor.py", line 278, in edit_requests
+    metrics = {"pre": compute_edit_quality(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)}
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate.py", line 93, in compute_edit_quality
+    ret['fluency'] = test_generation_quality(model=model,tok=tok,prefixes=rewrite_prompts if isinstance(rewrite_prompts,list) else [rewrite_prompts,], max_out_len=100, vanilla_generation=False)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 194, in test_generation_quality
+    ngram_entropy = n_gram_entropy(gen_texts)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 204, in n_gram_entropy
+    [compute_n_gram_entropy(txt) for txt in gen_texts]
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 204, in <listcomp>
+    [compute_n_gram_entropy(txt) for txt in gen_texts]
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 216, in compute_n_gram_entropy
+    fdist = compute_freq(sentence, n)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/../easyeditor/evaluate/evaluate_utils.py", line 227, in compute_freq
+    tokens = nltk.word_tokenize(sentence)
+  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/tokenize/__init__.py", line 129, in word_tokenize
+    sentences = [text] if preserve_line else sent_tokenize(text, language)
+  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/tokenize/__init__.py", line 106, in sent_tokenize
+    tokenizer = load(f"tokenizers/punkt/{language}.pickle")
+  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/data.py", line 750, in load
+    opened_resource = _open(resource_url)
+  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/data.py", line 876, in _open
+    return find(path_, path + [""]).open()
+  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/nltk/data.py", line 583, in find
+    raise LookupError(resource_not_found)
+LookupError: 
+**********************************************************************
+  Resource [93mpunkt[0m not found.
+  Please use the NLTK Downloader to obtain the resource:
+
+  [31m>>> import nltk
+  >>> nltk.download('punkt')
+  [0m
+  For more information see: https://www.nltk.org/data.html
+
+  Attempted to load [93mtokenizers/punkt/PY3/english.pickle[0m
+
+  Searched in:
+    - '/home/bingxing2/home/scx7avs/nltk_data'
+    - '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/nltk_data'
+    - '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/share/nltk_data'
+    - '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/nltk_data'
+    - '/usr/share/nltk_data'
+    - '/usr/local/share/nltk_data'
+    - '/usr/lib/nltk_data'
+    - '/usr/local/lib/nltk_data'
+    - ''
+**********************************************************************
+
