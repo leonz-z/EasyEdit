@@ -1,5 +1,5 @@
 alg_name: ROME
-model_name: Qwen-7B
+model_name: Qwen1.5-7B-Chat
 stats_dir: ./data/stats
 device: 0
 layers: [5]

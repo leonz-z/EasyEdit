@@ -16,7 +16,7 @@ fi
 # MODEL=Llama-2-7b-ms # 3090
 # source activate EasyEdit
 # A100
-MODEL=Qwen1.5-7B-Chat
+MODEL=Qwen1.5-7B
 export HUGGINGFACE_CACHE=/home/bingxing2/public/models/Qwen/
 module load compilers/cuda/11.8
 module load cudnn/8.8.1.3_cuda11.x
