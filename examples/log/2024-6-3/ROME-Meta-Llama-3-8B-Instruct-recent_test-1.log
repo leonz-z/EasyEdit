@@ -1,0 +1,7 @@
+2024-06-03 23:05:17,285 - easyeditor.editors.editor - INFO - Instantiating model
+06/03/2024 23:05:17 - INFO - easyeditor.editors.editor -   Instantiating model
+/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data
+['/home/bingxing2/home/scx7avs/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/share/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/nltk_data', '/usr/share/nltk_data', '/usr/local/share/nltk_data', '/usr/lib/nltk_data', '/usr/local/lib/nltk_data', '/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data']
+./Meta-Llama-3-8B-Instruct_recent_pre_edit.json
+Using Huggingface cache: /home/bingxing2/public/models/llama3/Meta-Llama-3-8B-Instruct
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:02<00:06,  2.01s/it]
