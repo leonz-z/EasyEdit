@@ -152,7 +152,7 @@ class BaseEditor:
         else:
             prompts, target_new = [prompts,], [target_new,]
 
-        if hasattr(self.hparams, 'batch_size'):  # For Singleton Editing, bs=1
+        if hasattr(self.hparams, 'batch_size') and not BatchEditor.is_batchable_method(self.alg_name):  # For Singleton Editing, bs=1
             assert self.hparams.batch_size == 1, 'Single Editing: batch_size should be set to 1'
 
         if ground_truth is not None:
@@ -266,8 +266,9 @@ class BaseEditor:
         if hasattr(self.hparams, 'batch_size'):  # For Singleton Editing, bs=1
             assert self.hparams.batch_size == 1, 'Single Editing: batch_size should be set to 1'
         all_metrics = []
-        if 'pre_file' in kwargs:
-            all_metrics = json.load(open(kwargs['pre_file'], 'r'))
+        if 'pre_edit' in kwargs and kwargs['pre_edit'] is not None:
+            metrics = kwargs['pre_edit']
+            all_metrics = metrics
         else:
             for i, request in enumerate(tqdm(requests)):
                 if self.alg_name == 'IKE':
@@ -341,7 +342,7 @@ class BaseEditor:
             for i, request in enumerate(tqdm(requests, total=len(requests))):
                 edited_model, weights_copy, icl_examples = edit_func(request)
                 edit_evaluation(all_metrics, request, edited_model, i, eval_metric, test_generation, icl_examples, **kwargs)
-                if self.alg_name == 'KN' or self.alg_name == 'GRACE':
+                if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
                     with torch.no_grad():
                         weights_copy()
                 elif self.alg_name == 'LoRA':
@@ -363,3 +364,49 @@ class BaseEditor:
             summary_metrics(all_metrics)
 
         return all_metrics, edited_model, weights_copy
+
+    def normal_edit(
+        self,
+        prompts: List[str],
+        target_new: List[str],
+        sequential_edit=False,
+    ):
+        """
+        `prompts`: list or str
+            the prompts to edit
+        `ground_truth`: str
+            the ground truth / expected output
+        """
+        assert len(prompts) == len(target_new)
+        ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
+
+
+        assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
+
+        requests = _prepare_requests(prompts, target_new, ground_truth)
+
+        assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
+
+        # print(f"[editor.py][batch_edit] `batch_size`={self.hparams.batch_size}")
+        # for epc in range(epoch):
+        #     print(f"[editor.py][batch_edit] `Epoch` = {epc+1}")
+        #     for record_chunks in self._chunks(requests, self.hparams.batch_size):
+        start = time()
+
+        edited_model, weights_copy = self.apply_algo(
+            self.model,
+            self.tok,
+            requests,  # record_chunks -> requests
+            self.hparams,
+            copy=False,
+            return_orig_weights=True,
+            keep_original_weight=False,
+        )
+        exec_time = time() - start
+        LOG.info(f"Execution editing took {exec_time}")
+
+        with torch.no_grad():
+            for k, v in weights_copy.items():
+                nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
+
+        return None, edited_model, weights_copy
