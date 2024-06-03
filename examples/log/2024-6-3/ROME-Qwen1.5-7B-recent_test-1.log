@@ -6,3 +6,20 @@
 Using Huggingface cache: /home/bingxing2/public/models/Qwen/Qwen1.5-7B
 Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:02<00:06,  2.24s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:04<00:04,  2.21s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:06<00:02,  2.34s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:08<00:00,  2.03s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:08<00:00,  2.12s/it]
 Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+2024-06-03 23:25:13,039 - easyeditor.editors.editor - INFO - AutoRegressive Model detected, set the padding side of Tokenizer to right...
+06/03/2024 23:25:13 - INFO - easyeditor.editors.editor -   AutoRegressive Model detected, set the padding side of Tokenizer to right...
+  0%|          | 0/1266 [00:00<?, ?it/s]  0%|          | 0/1266 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/run_knowedit_llama2.py", line 208, in <module>
+    metrics, edited_model, _ = editor.edit(
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/editors/editor.py", line 171, in edit
+    return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/editors/editor.py", line 280, in edit_requests
+    metrics = {"pre": compute_edit_quality(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)}
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/evaluate/evaluate.py", line 64, in compute_edit_quality
+    ret = compute_rewrite_or_rephrase_quality(model, model_name, hparams, tok,
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/evaluate/evaluate.py", line 133, in compute_rewrite_or_rephrase_quality
+    acc = test_prediction_acc(model, tok, hparams, prompt, target_new, device)
+  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/evaluate/evaluate_utils.py", line 134, in test_prediction_acc
+    logits = outputs.logits
+AttributeError: 'BaseModelOutputWithPast' object has no attribute 'logits'
