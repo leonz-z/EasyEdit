@@ -3,7 +3,7 @@ import os.path
 import sys
 import json
 import random
-sys.path.append('..')
+sys.path.append(os.getcwd())
 from easyeditor import (
     FTHyperParams, 
     IKEHyperParams, 
