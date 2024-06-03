@@ -10,7 +10,11 @@ from sklearn.metrics import f1_score
 import openai
 
 # fix nltk download issue
-nltk.data.path.append(os.path.join(os.getcwd(), "/nltk_data")) 
+# print(os.getcwd())
+nltk_path = os.getcwd() + "/nltk_data"
+print(nltk_path)
+nltk.data.path.append(nltk_path)
+print(nltk.data.path)
 
 def test_batch_prediction_acc(model, tok, hparams, prompts, target, device, locality=False):
     prompt_tok = tok(

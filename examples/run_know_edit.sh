@@ -3,9 +3,9 @@
 DATE=2024-6-3
 
 # Ensure log directory exists
-# if [ ! -d "examples/log" ]; then
-#     mkdir examples/log
-# fi
+if [ ! -d "examples/log" ]; then
+    mkdir examples/log
+fi
 # if log/$DATE does not exist, create it
 if [ ! -d "examples/log/$DATE" ]; then
     mkdir "examples/log/$DATE"
@@ -14,15 +14,13 @@ fi
 # 3090
 # export HUGGINGFACE_CACHE=/share/huggingface/ # 3090
 # MODEL=Llama-2-7b-ms # 3090
-
+# source activate EasyEdit
 # A100
 MODEL=Llama-2-7b-hf # A100
 export HUGGINGFACE_CACHE=/home/bingxing2/public/models/llama2 # A100
 module load compilers/cuda/11.8
 module load cudnn/8.8.1.3_cuda11.x
 module load compilers/gcc/12.2.0
-# source ~/.bashrc
-# conda activate ke
 source activate ke
 # DATA_TEST=ZsRE-test-all
 # DATA_TYPE=zsre
