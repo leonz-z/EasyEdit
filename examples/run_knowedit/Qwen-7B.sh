@@ -15,7 +15,7 @@ source activate ke
 # 3090
 export HUGGINGFACE_CACHE=/share/huggingface/ 
 export CUDA_VISIBLE_DEVICES=2
-MODEL=Llama-2-7b-ms 
+MODEL=Qwen-7B
 
 # A100
 # MODEL=Llama-2-7b-chat-hf 
