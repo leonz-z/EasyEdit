@@ -11,10 +11,10 @@ if [ ! -d "examples/log/$DATE" ]; then
     mkdir "examples/log/$DATE"
 fi
 
-source activate ke
+source activate ke2torch23cu121
 # 3090
 export HUGGINGFACE_CACHE=/share/huggingface/ 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=3
 MODEL=Qwen-7B
 
 # A100
