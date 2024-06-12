@@ -15,8 +15,8 @@ log
 results
 checkpoint
 metrics
-dataset
 .ipynb_checkpoints
 backup
 safety_results*
 checkpoint
+.DS_Store
