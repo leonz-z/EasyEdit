@@ -101,6 +101,9 @@ class BaseEditor:
                 self.model = AutoModel.from_pretrained(self.model_name,trust_remote_code=True, torch_dtype=torch_dtype, device_map=device_map)
                 self.tok = AutoTokenizer.from_pretrained(self.model_name,trust_remote_code=True)
                 self.tok.pad_token_id = self.tok.eos_token_id
+            elif 'qwen2' in self.model_name.lower():
+                self.model = AutoModelForCausalLM.from_pretrained(self.model_name,trust_remote_code=True, torch_dtype=torch_dtype, device_map=device_map)
+                self.tok = AutoTokenizer.from_pretrained(self.model_name, eos_token='<|endoftext|>', pad_token='<|endoftext|>',unk_token='<|endoftext|>', trust_remote_code=True)
             elif 'qwen' in self.model_name.lower():
                 # self.model = AutoModelForCausalLM.from_pretrained(self.model_name,fp32=False,trust_remote_code=True, device_map=device_map)
                 # fix cjc@0603 TypeError: __init__() got an unexpected keyword argument 'fp32' qwen1.5
@@ -148,7 +151,8 @@ class BaseEditor:
         `locality_inputs`: dict
             for locality
         """
-        # test_generation = kwargs['test_generation'] if 'test_generation' in kwargs.keys() else False
+        test_generation = kwargs.pop('test_generation', False)
+
         if isinstance(prompts, List):
             assert len(prompts) == len(target_new)
         else:
