@@ -29,7 +29,11 @@ def apply_ike_to_model(
 
     assert train_ds is not None
     device = torch.device(f'cuda:{hparams.device}')
-    sentence_model = SentenceTransformer(hparams.sentence_model_name).to(device)
+    huggingface_cache = os.environ.get('HUGGINGFACE_CACHE')
+    if huggingface_cache:
+        sentence_model_name = os.path.join(huggingface_cache, hparams.sentence_model_name)
+        print(f"Using Huggingface cache: {sentence_model_name}")        
+    sentence_model = SentenceTransformer(sentence_model_name).to(device)
 
     safe_model_name = hparams.sentence_model_name.rsplit('/', 1)[-1]
     with open(f'{hparams.results_dir}/{hparams.alg_name}/embedding/'
