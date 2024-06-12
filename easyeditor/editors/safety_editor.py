@@ -67,12 +67,16 @@ class SafetyEditor:
         LOG.info("Instantiating model")
 
         if type(self.model_name) is str:
+            # add: use HUGGINGFACE_CACHE golbal variable
+            huggingface_cache = os.environ.get('HUGGINGFACE_CACHE')
+            if huggingface_cache:
+                self.model_name = os.path.join(huggingface_cache, self.model_name)
+                print(f"Using Huggingface cache: {self.model_name}")
+            # set device
             device_map = 'auto' if hparams.model_parallel else None
-            # cjc@0529: add torch_dtype bf16 support
             if hasattr(hparams, 'fp16') and hparams.fp16:
                 torch_dtype = torch.float16
             elif hasattr(hparams, 'bf16') and hparams.bf16:
-                print("Warning: Please make sure your GPU and LLM supports bfloat16.")
                 torch_dtype = torch.bfloat16
             else:
                 torch_dtype = torch.float32
