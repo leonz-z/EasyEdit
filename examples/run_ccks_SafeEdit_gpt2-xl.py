@@ -1,8 +1,7 @@
 import os
 import os.path
 import sys
-# sys.path.append('..')
-# sys.path.append('../..')
+sys.path.append(os.getcwd())
 import numpy as np
 import hydra
 from easyeditor import (

@@ -14,7 +14,7 @@ fi
 source activate ke2torch23cu121
 # 3090
 export HUGGINGFACE_CACHE=/share/huggingface/ 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=2
 MODEL=gpt2-xl
 
 # A100
@@ -24,19 +24,18 @@ MODEL=gpt2-xl
 # module load cudnn/8.8.1.3_cuda11.x
 # module load compilers/gcc/12.2.0
 # source activate ke
-DATA_TEST=ZsRE-test-all
-DATA_TYPE=zsre
-EDIT_METHOD=ROME
+EDIT_METHOD=DINM
+DATA=SafeEdit_test
 # DATA_TEST=recent_test
 # DATA_TRAIN=recent_train
 # DATA_TYPE=recent
 NUM=1
 
-nohup python examples/run_knowedit_llama2.py \
+nohup python examples/run_ccks_SafeEdit_gpt2-xl.py \
     --editing_method $EDIT_METHOD \
-    --hparams_dir hparams/$EDIT_METHOD/$MODEL \
-    --data_dir LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA_TEST.json \
-    --metrics_save_dir examples/output \
-    --datatype $DATA_TYPE \
-    > examples/log/$DATE/$EDIT_METHOD-$MODEL-$DATA_TEST-$NUM.log 2>&1 &
-    # --train_data_path LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA_TRAIN.json \
+    --edited_llm $MODEL \
+    --hparams_dir hparams/$EDIT_METHOD/$MODEL.yaml \
+    --safety_classifier_dir /share/huggingface/DINM-Safety-Classifier \
+    --data_dir LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA.json \
+    --metrics_save_dir examples/safety_results_test \
+    > examples/log/$DATE/$EDIT_METHOD-$MODEL-$DATA-$NUM.log 2>&1 &

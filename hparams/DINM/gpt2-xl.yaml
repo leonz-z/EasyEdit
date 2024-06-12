@@ -1,5 +1,5 @@
-alg_name: 'DINM'
-model_name: "./hugging_cache/gpt2-xl"  # your own path 
+alg_name: DINM
+model_name: gpt2-xl  # your own path 
 model_class: GPT2LMHeadModel
 tokenizer_class: GPT2Tokenizer
 
@@ -34,6 +34,7 @@ attn_module_tmp: "transformer.h.{}.attn"
 ln_f_module: "transformer.ln_f"
 lm_head_module: "transformer.wte"
 model_parallel: false
+bf16: true
 
 
 
