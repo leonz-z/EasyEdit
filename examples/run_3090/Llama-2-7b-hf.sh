@@ -14,7 +14,7 @@ fi
 source activate ke2torch23cu121
 # 3090
 export HUGGINGFACE_CACHE=/share/huggingface/ 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=3
 MODEL=Llama-2-7b-ms 
 
 # A100
@@ -24,12 +24,12 @@ MODEL=Llama-2-7b-ms
 # module load cudnn/8.8.1.3_cuda11.x
 # module load compilers/gcc/12.2.0
 # source activate ke
-# DATA_TEST=ZsRE-test-all
-# DATA_TYPE=zsre
+DATA_TEST=ZsRE-test-all
+DATA_TYPE=zsre
 EDIT_METHOD=ROME
-DATA_TEST=recent_test
-DATA_TRAIN=recent_train
-DATA_TYPE=recent
+# DATA_TEST=recent_test
+# DATA_TRAIN=recent_train
+# DATA_TYPE=recent
 NUM=1
 
 nohup python examples/run_knowedit_llama2.py \
