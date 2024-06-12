@@ -200,7 +200,11 @@ if __name__ == "__main__":
         pre_edit = None
     if args.editing_method == 'IKE':
         train_ds = KnowEditDataset(args.train_data_path)
-        sentence_model = SentenceTransformer(hparams.sentence_model_name).to(f'cuda:{hparams.device}')
+        huggingface_cache = os.environ.get('HUGGINGFACE_CACHE')
+        if huggingface_cache:
+            sentence_model_name = os.path.join(huggingface_cache, hparams.sentence_model_name)
+            print(f"Using Huggingface cache: {sentence_model_name}")        
+        sentence_model = SentenceTransformer(sentence_model_name).to(f'cuda:{hparams.device}')
         encode_ike_facts(sentence_model, train_ds, hparams)
     else:
         train_ds = None
