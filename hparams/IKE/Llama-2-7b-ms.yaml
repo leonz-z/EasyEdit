@@ -6,3 +6,4 @@ results_dir: "./results"
 
 k: 16
 model_parallel: false
+bf16: true

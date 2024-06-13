@@ -36,6 +36,6 @@ nohup python examples/run_ccks_SafeEdit_gpt2-xl.py \
     --edited_llm $MODEL \
     --hparams_dir hparams/$EDIT_METHOD/$MODEL.yaml \
     --safety_classifier_dir /share/huggingface/DINM-Safety-Classifier \
-    --data_dir LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA.json \
+    --data_dir dataset/ccks2024_know_edit/$DATA.json \
     --metrics_save_dir examples/safety_results_test \
     > examples/log/$DATE/$EDIT_METHOD-$MODEL-$DATA-$NUM.log 2>&1 &
