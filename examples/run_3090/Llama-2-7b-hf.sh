@@ -14,7 +14,7 @@ fi
 source activate ke2torch23cu121
 # 3090
 export HUGGINGFACE_CACHE=/share/huggingface/ 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=3
 MODEL=Llama-2-7b-ms
 
 # A100

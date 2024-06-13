@@ -80,6 +80,7 @@ def execute_lora(
             f"[{request['prompt']}] -> [{request['target_new']}]"
         )
     device = torch.device(f'cuda:{hparams.device}')
+    print(f"Using device: {device}")
     # Define inputs
     texts = [r["prompt"] for r in requests]
     targets = [r["target_new"] for r in requests]
