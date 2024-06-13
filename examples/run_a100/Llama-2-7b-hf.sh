@@ -22,7 +22,7 @@ module load compilers/gcc/12.2.0
 source activate ke2torch23cu121
 # DATA_TEST=ZsRE-test-all
 # DATA_TYPE=zsre
-EDIT_METHOD=KN
+EDIT_METHOD=IKE
 DATA_TEST=recent_test
 DATA_TRAIN=recent_train
 DATA_TYPE=recent
@@ -31,7 +31,7 @@ NUM=1
  python examples/run_knowedit_llama2.py \
     --editing_method $EDIT_METHOD \
     --hparams_dir hparams/$EDIT_METHOD/$MODEL \
-    --data_dir LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA_TEST.json \
+    --data_dir dataset/ccks2024_know_edit/$DATA_TEST.json \
     --datatype $DATA_TYPE \
-    --train_data_path LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA_TRAIN.json \
+    --train_data_path dataset/ccks2024_know_edit/$DATA_TRAIN.json \
     > examples/log/$DATE/$EDIT_METHOD-$MODEL-$DATA_TEST-$NUM.log 2>&1

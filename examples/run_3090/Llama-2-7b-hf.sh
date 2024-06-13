@@ -35,8 +35,8 @@ NUM=1
 nohup python examples/run_knowedit_llama2.py \
     --editing_method $EDIT_METHOD \
     --hparams_dir hparams/$EDIT_METHOD/$MODEL \
-    --data_dir LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA_TEST.json \
-    --train_data_path LLMKnowledgeEditDataset/ccks2024_know_edit/$DATA_TRAIN.json \
+    --data_dir dataset/ccks2024_know_edit/$DATA_TEST.json \
+    --train_data_path dataset/ccks2024_know_edit/$DATA_TRAIN.json \
     --metrics_save_dir examples/output \
     --datatype $DATA_TYPE \
     > examples/log/$DATE/$EDIT_METHOD-$MODEL-$DATA_TEST-$NUM.log 2>&1 &
