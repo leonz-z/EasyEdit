@@ -171,8 +171,8 @@ class BaseEditor:
         else:
             requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts, locality_inputs, portability_inputs, **kwargs)
         # **kwargs包含test_generation fix bug cjc@0529
-        # return self.edit_requests(requests, sequential_edit, verbose, test_generation=test_generation, **kwargs)
-        return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
+        # return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
+        return self.edit_requests(requests, sequential_edit, verbose, test_generation=test_generation, **kwargs)
 
     def batch_edit(self,
                    prompts: List[str],
