@@ -1,8 +1,8 @@
-alg_name: "LoRA"
-model_name: "/share/huggingface/gpt2-xl"
+alg_name: LoRA
+model_name: gpt2-xl
 device: 0
 lora_type: "adalora"
-layers: []
+layers: [] # v1 [] v2:MEMIT [13, 14, 15, 16, 17]
 num_steps: 30
 batch_size: 1
 max_length: 30

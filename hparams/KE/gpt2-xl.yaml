@@ -3,10 +3,10 @@ archive: ./results/models/KE/gpt2-xl
 alg_name: "KE"
 device: 4
 
-model_name: ./hugging_cache/gpt2-xl
+model_name: gpt2-xl
 model_class: GPT2LMHeadModel
 tokenizer_class: GPT2Tokenizer
-tokenizer_name: ./hugging_cache/gpt2-xl
+tokenizer_name: gpt2-xl
 inner_params:
 - transformer.h.45.mlp.c_proj.weight
 - transformer.h.45.mlp.c_fc.weight
