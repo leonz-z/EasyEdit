@@ -169,7 +169,7 @@ if __name__ == '__main__':
         editing_hparams = DINMHyperParams
     else:
         raise NotImplementedError
-    output_dir = f'{args.metrics_save_dir}/SafeEdit_test.json'
+    output_dir = f'{args.metrics_save_dir}/{args.editing_method}_{args.edited_llm}_SafeEdit_test.json'
     #### some variables used for statistical results 
     if not os.path.exists(args.metrics_save_dir):
         os.mkdir(args.metrics_save_dir)

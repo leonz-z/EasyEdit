@@ -223,4 +223,4 @@ if __name__ == "__main__":
     )
     if not os.path.exists(args.metrics_save_dir):
         os.makedirs(args.metrics_save_dir)
-    json.dump(metrics, open(os.path.join(args.metrics_save_dir, f'{args.editing_method}_{args.datatype}_{hparams.model_name.split("/")[-1]}_results.json'), 'w'), indent=4)
+    json.dump(metrics, open(os.path.join(args.metrics_save_dir, f'{args.editing_method}_{args.datatype}_{args.hparams_dir.split("/")[-1]}_results.json'), 'w'), indent=4)
