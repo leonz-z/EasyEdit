@@ -191,7 +191,7 @@ if __name__ == "__main__":
         }
     
     hparams = editing_hparams.from_hparams(args.hparams_dir)
-    args.pre_file = f"./{hparams.model_name.split('/')[-1]}_{args.datatype}_pre_edit.json"
+    args.pre_file = f"./pre_edit/{hparams.model_name.split('/')[-1]}_{args.datatype}_pre_edit.json"
     print(args.pre_file)
     if args.pre_file is not None and os.path.exists(args.pre_file):
         pre_edit = json.load(open(args.pre_file,'r'))
