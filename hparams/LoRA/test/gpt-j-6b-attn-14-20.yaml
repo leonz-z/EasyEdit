@@ -1,0 +1,28 @@
+alg_name: LoRA
+batch_size: 1
+device: 0
+kl_factor: 0
+layers:
+- 14
+- 15
+- 16
+- 17
+- 18
+- 19
+- 20
+lora_alpha: 32
+lora_dropout: 0.1
+lora_type: adalora
+lr: 5e-3
+max_length: 30
+model_name: gpt-j-6b
+model_parallel: false
+norm_constraint: false
+num_steps: 50
+rank: 8
+target_modules:
+- q_proj
+- k_proj
+- v_proj
+- out_proj
+weight_decay: 0

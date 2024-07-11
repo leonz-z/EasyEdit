@@ -1,0 +1,23 @@
+alg_name: LoRA
+model_name: gpt-j-6b
+# data_path: "/home/lyc/TNTprojectz/KE/EasyEdit/dataset/portability/One Hop/"
+# data_file: "zsre_mend_eval_portability_gpt4.json"
+# torch_dtype: ""
+# load_in_8bit: true
+# CUDA_VISIBLE_DEVICES: "2,3"
+lora_type: adalora
+device: 0
+model_parallel: false
+layers: [4, 5, 7, 9, 18, 24]
+num_steps: 100
+batch_size: 1
+max_length: 30
+lr: 5e-3
+weight_decay: 0
+kl_factor: 0
+rank: 16
+lora_alpha: 32
+lora_dropout: 0.1
+norm_constraint: false
+target_modules: ['q_proj','k_proj','v_proj','out_proj','fc_in','fc_out']
+bf16: true
