@@ -209,18 +209,33 @@ if __name__ == "__main__":
     else:
         train_ds = None
     editor = BaseEditor.from_hparams(hparams)
-    metrics, edited_model, _ = editor.edit(
-        prompts=prompts,
-        target_new=target_new,
-        subject=subjects,
-        locality_inputs=locality_inputs,
-        portability_inputs=portability_inputs,
-        train_ds=train_ds,
-        keep_original_weight=True,
-        pre_file=args.pre_file,
-        pre_edit = pre_edit,
-        test_generation=True,
-    )
+    if hparams.batch_size == 1:
+        metrics, edited_model, _ = editor.edit(
+            prompts=prompts,
+            target_new=target_new,
+            subject=subjects,
+            locality_inputs=locality_inputs,
+            portability_inputs=portability_inputs,
+            train_ds=train_ds,
+            keep_original_weight=True,
+            pre_file=args.pre_file,
+            pre_edit = pre_edit,
+            test_generation=True,
+        )
+    else:
+        metrics, edited_model, _ = editor.batch_edit(
+            prompts=prompts,
+            target_new=target_new,
+            subject=subjects,
+            locality_inputs=locality_inputs,
+            portability_inputs=portability_inputs,
+            train_ds=train_ds,
+            keep_original_weight=True,
+            pre_file=args.pre_file,
+            pre_edit = pre_edit,
+            test_generation=True,
+        )
+    
     if not os.path.exists(args.metrics_save_dir):
         os.makedirs(args.metrics_save_dir)
     json.dump(metrics, open(os.path.join(args.metrics_save_dir, f'{args.editing_method}_{args.datatype}_{args.hparams_dir.split("/")[-1]}_results.json'), 'w'), indent=4)
