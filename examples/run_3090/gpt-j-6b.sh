@@ -14,9 +14,9 @@ fi
 source activate ke2torch23cu121
 # 3090
 export HUGGINGFACE_CACHE=/share/huggingface/ 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=2
 MODEL=gpt-j-6b
-hparams=$MODEL-0-5
+hparams=$MODEL-12-17
 
 DATA_TEST=ZsRE-test-all
 DATA_TYPE=zsre
