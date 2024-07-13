@@ -10,7 +10,7 @@ device: 0
 model_parallel: false
 layers: [8, 12, 13, 16, 17, 19]
 num_steps: 100
-batch_size: 1
+batch_size: 64
 max_length: 30
 lr: 5e-3
 weight_decay: 0
