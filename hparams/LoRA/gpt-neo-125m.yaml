@@ -1,12 +1,12 @@
 alg_name: "LoRA"
-model_name: "/home/lyc/TNTprojectz/LLM/huggingface/gpt-neo-125m"
+model_name: "/share/huggingface/gpt-neo-125m"
 lora_type: "lora"
-device: 1
+device: 0
 model_parallel: false
 layers: [0,8,9,10]
-num_steps: 20
-batch_size: 64
-max_length: 30
+num_steps: 3
+batch_size: 1
+max_length: 5
 lr: 5e-3
 weight_decay: 0
 kl_factor: 0
