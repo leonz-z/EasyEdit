@@ -1234,7 +1234,7 @@ def test_Llama2():
         locality_inputs=locality_inputs,
         portability_inputs=portability_inputs,
         train_ds=train_ds,
-        sequential_edit=True
+        sequential_edit=False
     )
 
     import pdb
@@ -2249,7 +2249,8 @@ def test_MEMIT_Qwen():
         }
     }
 
-    hparams = MEMITHyperParams.from_hparams('./hparams/MEMIT/qwen-7b')
+    # hparams = MEMITHyperParams.from_hparams('./hparams/MEMIT/qwen-7b')
+    hparams = MEMITHyperParams.from_hparams('./hparams/MEMIT/qwen2-7b')
     editor = BaseEditor.from_hparams(hparams)
     metrics, edited_model, _ = editor.edit(
         prompts=prompts,
@@ -2267,7 +2268,8 @@ def test_MEMIT_Qwen():
     return metrics, edited_model
 
 def test_MEND_Train_Qwen():
-    training_hparams = MENDTrainingHparams.from_hparams('./hparams/TRAINING/MEND/qwen-7b.yaml')
+    # training_hparams = MENDTrainingHparams.from_hparams('./hparams/TRAINING/MEND/qwen-7b.yaml')
+    training_hparams = MENDTrainingHparams.from_hparams('./hparams/TRAINING/MEND/qwen2-7b.yaml')
     train_ds = ZsreDataset('./data/zsre/zsre_mend_train.json', config=training_hparams)
     eval_ds = ZsreDataset('./data/zsre/zsre_mend_eval.json', config=training_hparams)
     trainer = EditTrainer(
@@ -2287,7 +2289,8 @@ def test_MEND_Qwen():
                     'Eliel Saarinen', 'DuMont Television Network', 'Los Angeles', 'Apple', 'basketball', 'Colt\'s Manufacturing Company']
     target_new = ['Lamiinae', 'winger',
                   'Alfred Lahti', 'ITV', 'New Orleans', 'Microsoft', 'football', 'Colt\'s Manufacturing Corporation']
-    hparams = MENDHyperParams.from_hparams('./hparams/MEND/qwen-7b')
+    # hparams = MENDHyperParams.from_hparams('./hparams/MEND/qwen-7b')
+    hparams = MENDHyperParams.from_hparams('./hparams/MEND/qwen2-7b')
     editor = BaseEditor.from_hparams(hparams)
     metrics, edited_model, _ = editor.edit(
         prompts=prompts,
@@ -2318,6 +2321,25 @@ def test_GRACE_GPT2():
             ground_truth=ground_truth,
             target_new=target_new,
             keep_original_weight=True
+        )
+    print(metrics)
+
+def test_GRACE_Qwen():
+
+    prompts = ['Which family does Ramalinaceae belong to',
+                'What role does Denny Herzig play in football?', 'Who was the designer of Lahti Town Hall?',
+                'What is the original channel that It\'s a Business played on?', 'What city did Marl Young live when he died?',
+                'Steve Jobs was the founder of', 'LeBron James plays the sport of', 'The manufacturer of Colt King Cobra was who']
+    ground_truth = ['Lecanorales', 'defender',
+                        'Eliel Saarinen', 'DuMont Television Network', 'Los Angeles', 'Apple', 'basketball', 'Colt\'s Manufacturing Company']
+    target_new = ['Lamiinae', 'winger',
+                    'Alfred Lahti', 'ITV', 'New Orleans', 'Microsoft', 'football', 'Colt\'s Manufacturing Corporation']
+    hparams = GraceHyperParams.from_hparams('./hparams/GRACE/qwen2-7b')
+    editor = BaseEditor.from_hparams(hparams)
+    metrics, edited_model, _ = editor.edit(
+            prompts=prompts,
+            ground_truth=ground_truth,
+            target_new=target_new
         )
     print(metrics)
 
@@ -2721,7 +2743,7 @@ def main():
     # test_ROME_LlaMA()
     # test_ROME_DEMO()
     # ROME_DEMO_2()
-    # test_Llama2()
+    test_Llama2()
     # test_ROME_Baichuan()
     # test_MEND_Baichuan()
     # test_MEMIT_Baichuan()
@@ -2748,11 +2770,12 @@ def main():
     # test_ROME_Internlm()
     # test_FT_Qwen()
     # test_KN_Qwen()
-    test_ROME_Qwen()
+    # test_ROME_Qwen()
     # test_IKE_Qwen()
     # test_MEMIT_Qwen()
     # test_MEND_Train_Qwen()
     # test_MEND_Qwen()
+    # test_GRACE_Qwen()
     # test_GRACE_GPT2()
     # test_PMET()
     # test_FT_Mistral()
