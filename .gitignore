@@ -21,3 +21,4 @@ safety_results*
 checkpoint
 .DS_Store
 answer*.json
+nltk_data
