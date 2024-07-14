@@ -20,3 +20,4 @@ backup
 safety_results*
 checkpoint
 .DS_Store
+answer*.json
