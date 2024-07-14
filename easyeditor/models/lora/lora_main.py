@@ -63,7 +63,7 @@ def execute_lora(
             r=hparams.rank,
             lora_alpha=hparams.lora_alpha, lora_dropout=hparams.lora_dropout,
             layers_to_transform=hparams.layers if len(hparams.layers) > 0 else None,
-            target_modules=hparams.target_modules
+            target_modules=hparams.target_modules # target_knb
         )
         peft_model = get_peft_model(model, peft_config)
 
