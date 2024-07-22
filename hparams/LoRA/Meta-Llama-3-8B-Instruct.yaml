@@ -2,7 +2,7 @@ alg_name: LoRA
 model_name: Meta-Llama-3-8B-Instruct
 device: 0
 
-lora_type: "adalora"
+lora_type: lora # TODO:adalora
 layers: []
 num_steps: 70
 batch_size: 1
@@ -16,3 +16,4 @@ lora_dropout: 0.1
 norm_constraint: false
 target_modules: ["q_proj", "v_proj"]  #["up_proj", "down_proj"] #["q_proj", "v_proj"]
 model_parallel: true
+bf16: true
