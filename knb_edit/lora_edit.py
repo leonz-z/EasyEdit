@@ -1,18 +1,16 @@
 import os
 import sys
 import json
-# sys.path.append(os.getcwd())
 sys.path.append('../')
+import argparse
 from easyeditor import LoRAHyperParams
 from easyeditor import BaseEditor
-# from easyeditor.models.ike import encode_ike_facts
-# from sentence_transformers import SentenceTransformer
 from easyeditor import KnowEditDataset
 
 data_dir = '../dataset/ccks2024_know_edit/ZsRE-test-all.json'
 train_data_path = None
 ds_size, data_type, = 326, 'zsre'
-hparams_dir = '../hparams/LoRA/Meta-Llama-3-8B-Instruct.yaml'
+hparams_dir = '../hparams/LoRA/Meta-Llama-3-8B-Instruct'
 metrics_save_dir = './EasyEditCache/metrics'
 
 datas = KnowEditDataset(data_dir,size=ds_size)
@@ -156,7 +154,7 @@ if data_type == 'wikibio':
     }
 
 hparams = LoRAHyperParams.from_hparams(hparams_dir)
-pre_file = f"../pre_edit/{hparams.model_name.split('/')[-1]}_{data_type}_pre_edit.json"
+pre_file = f"../pre_edit/{hparams.model_name.split('/')[-1]}_{data_type}_pre_edit_{ds_size}.json"
 if pre_file is not None and os.path.exists(pre_file):
     pre_edit = json.load(open(pre_file,'r'))
     assert len(pre_edit) == len(prompts)
@@ -167,8 +165,17 @@ train_ds = None
 
 editor = BaseEditor.from_hparams(hparams)
 
+# 命令行获取type和p参数
+# type取值范围['orgin','abs','square']
+# p取值范围 [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+parser = argparse.ArgumentParser()
+parser.add_argument('--type', type=str, default='orgin')
+parser.add_argument('--p', type=float, default=0.5)
+args = parser.parse_args()
 
-with open('./0-326-Meta-Llama-3-8B-Instruct-zsre-knb_orgin_dict.json', 'r') as f:
+type_grad, p = args.type, args.p
+print(f'0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-{str(p)}')
+with open(f'../../knb_dict/0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-{str(p)}.json', 'r') as f:
     knb_dict = json.load(f)
     
 # 单条数据编辑
@@ -188,4 +195,4 @@ metrics, edited_model, _ = editor.edit(
 
 if not os.path.exists(metrics_save_dir):
     os.makedirs(metrics_save_dir)
-json.dump(metrics, open(os.path.join(metrics_save_dir, f'KNB_LoRA_{data_type}_{ds_size}_{hparams_dir.split("/")[-1]}_results.json'), 'w'), indent=4)
+json.dump(metrics, open(os.path.join(metrics_save_dir, f'KNB_LoRA_{data_type}_{ds_size}_{hparams_dir.split("/")[-1]}-{type_grad}-{str(p)}-down_proj_results.json'), 'w'), indent=4)
