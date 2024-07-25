@@ -1,8 +1,8 @@
 #!/bin/bash
 
 DATE=$(date +%Y-%m-%d)
-if [ ! -d "log/$DATE" ]; then
-    mkdir -p "log/$DATE"
+if [ ! -d "logs/$DATE" ]; then
+    mkdir -p "logs/$DATE"
 fi
 
 module load compilers/cuda/12.1

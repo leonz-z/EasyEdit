@@ -158,7 +158,7 @@ if data_type == 'wikibio':
 hparams = LoRAHyperParams.from_hparams(hparams_dir)
 pre_file = f"../pre_edit/{hparams.model_name.split('/')[-1]}_{data_type}_pre_edit.json"
 if pre_file is not None and os.path.exists(pre_file):
-    pre_edit = json.load(open(pre_file,'r'))[:ds_size]
+    pre_edit = json.load(open(pre_file,'r'))
     assert len(pre_edit) == len(prompts)
 else:
     pre_edit = None
