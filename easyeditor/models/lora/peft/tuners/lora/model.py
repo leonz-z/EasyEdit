@@ -184,10 +184,9 @@ class LoraModel(BaseTuner):
         target_name_key = next(filter(lambda key: re.match(rf".*\.{key}$", current_key), pattern_keys), current_key)
         r = lora_config.rank_pattern.get(target_name_key, lora_config.r)
         alpha = lora_config.alpha_pattern.get(target_name_key, lora_config.lora_alpha)
-
         kwargs = {
             "r": r, "target_name": current_key,  # add param target_name 0422@cjc
-            "lora_alpha": alpha,
+            "lora_alpha": alpha, # "knb_dict": lora_config.knb_dict,  # add param knb_dict 0725@cjc
             "lora_dropout": lora_config.lora_dropout,
             "fan_in_fan_out": lora_config.fan_in_fan_out,
             "init_lora_weights": lora_config.init_lora_weights,

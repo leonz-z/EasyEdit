@@ -357,19 +357,24 @@ class Linear(nn.Module, LoraLayer):
         # add knowledge neurons mask Tensor 0422@cjc
         self.kn_mask = None
         if kwargs.get("target_name") and kwargs.get("knb_dict"):
-            target_name=kwargs.get("target_name") # 'transformer.h.0.mlp.c_proj'
+            target_name=kwargs.get("target_name") # 'transformer.h.0.mlp.c_proj' 'model.layers.0.mlp.up_proj
             knb_dict=kwargs.get("knb_dict")
-            try:
-                # import re
-                # match = re.match(r".*\.[^.]*\.(\d+)\.", target_name)
-                # layer_id = int(match.group(1))
-                layer_id = int(target_name.split(".")[2])
+            # import re
+            # match = re.match(r".*\.[^.]*\.(\d+)\.", target_name)
+            # layer_id = int(match.group(1))
+            # layer_id = int(target_name.split(".")[2])
+            layer_id = target_name.split(".")[2]
+            if layer_id in knb_dict:
                 mask_idx = knb_dict[layer_id]
-                # add knowledge neurons mask tensor 0422@cjc
-                self.kn_mask = mask_idx
-            except:
-                self.kn_mask = None
-                print(f"target_name:{target_name}\nknb_dict=\n{knb_dict}")
+            elif int(layer_id) in knb_dict:
+                mask_idx = knb_dict[int(layer_id)]
+            else:
+                mask_idx = None
+                print(f'{layer_id} not in {knb_dict.keys()}')
+            # add knowledge neurons mask tensor 0422@cjc
+            self.kn_mask = mask_idx
+        else:
+            print("No target_name or knb_dict found in kwargs")
         self.update_layer(
             adapter_name,
             r,
@@ -530,19 +535,21 @@ class Linear(nn.Module, LoraLayer):
 
                 if not self.use_dora[active_adapter]:
                     if self.kn_mask is not None:
-                        # modify 0422@cjc
-                        # x = x * mask
-                        # mask = torch.zeros(x.shape, device=x.device)
-                        # mask[...,self.kn_mask]=1
-                        # result = result + lora_B(lora_A(dropout(x))) * scaling
-                        # modify 0426@cjc
+                        # modify 0725@cjc
                         # delta_w=transpose(lora_B.weight @ lora_A.weight, self.fan_in_fan_out) * scaling
-                        delta_w = self.get_delta_weight(active_adapter)
-                        mask = torch.zeros(delta_w.shape, device=delta_w.device)
-                        mask[self.kn_mask,:] = 1
-                        delta_w = delta_w*mask
-                        result += (dropout(x)@delta_w)
-                        # 这样直接矩阵相乘,能让lora_A和lora_B的权重都更新吗?
+                        delta_w = self.get_delta_weight(active_adapter) # [4096, 14336]
+                        delta_w = delta_w.to(dtype=x.dtype)
+                        mask = torch.zeros(delta_w.shape, device=delta_w.device, dtype=x.dtype) 
+                        try: # llama
+                            mask[:, self.kn_mask] = 1
+                            delta_w = delta_w * mask
+                            delta_w = delta_w.T # [14336, 4096]
+                            result += (dropout(x) @ delta_w) # [1, 16, 14336]@[14336, 4096] = [1, 16, 14336]
+                        except: # gpt
+                            # 0725@cjc 不同llm维度之间差一个转置
+                            mask[self.kn_mask, :] = 1
+                            delta_w = delta_w * mask
+                            result += (dropout(x) @ delta_w)
                     else:
                         result = result + lora_B(lora_A(dropout(x))) * scaling
                 else:
@@ -1094,6 +1101,7 @@ def dispatch_default(
         # add knb_dict to kwargs 0422@cjc
         if lora_config.knb_dict:
             kwargs["knb_dict"] = lora_config.knb_dict
+            # print("knb_dict is added to kwargs")
         new_module = Linear(target, adapter_name, **kwargs)
     elif isinstance(target_base_layer, Conv1D):
         if not kwargs["fan_in_fan_out"]:
