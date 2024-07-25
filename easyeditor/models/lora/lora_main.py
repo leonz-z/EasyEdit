@@ -31,7 +31,7 @@ def apply_lora_to_model(
     if copy:
         model = deepcopy(model)
 
-    edited_model = execute_lora(model, tok, requests, hparams, keep_original_weight)
+    edited_model = execute_lora(model, tok, requests, hparams, keep_original_weight, **kwargs)
 
     return edited_model, weights_copy
 
@@ -61,13 +61,19 @@ def execute_lora(
     if not keep_original_weight and hasattr(model,'peft_config'):
         peft_model = model
     else:
+        if kwargs.get('knb_dict'):
+            knb_dict = kwargs['knb_dict']
+        else:
+            knb_dict = None
+            print("No knb_dict provided")
         peft_config = Config(
             task_type=TaskType.CAUSAL_LM,
             inference_mode=False,
             r=hparams.rank,
             lora_alpha=hparams.lora_alpha, lora_dropout=hparams.lora_dropout,
             layers_to_transform=hparams.layers if len(hparams.layers) > 0 else None,
-            target_modules=hparams.target_modules # target_knb
+            target_modules=hparams.target_modules, # target_knb
+            knb_dict=knb_dict,
         )
         peft_model = get_peft_model(model, peft_config)
 
@@ -165,7 +171,11 @@ def execute_lora(
             # if loss.item() >= 1e-3:
             loss.backward()
             opt.step()
-
+            gpu_cache = torch.cuda.memory_allocated() / 1024 ** 3
+            print(f"GPU:{gpu_cache:.2f}GB {gpu_cache/24*100:.2f}%")
+            torch.cuda.empty_cache()
+            gpu_cache = torch.cuda.memory_allocated() / 1024 ** 3
+            print(f"GPU:{gpu_cache:.2f}GB {gpu_cache/24*100:.2f}%")
         print(f"Total loss {loss_meter.avg}")
 
         # if loss_meter.avg < 1e-3:
