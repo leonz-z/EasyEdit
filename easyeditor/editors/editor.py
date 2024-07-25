@@ -212,16 +212,29 @@ class BaseEditor:
         all_metrics = []
         for record_chunks in _chunks(requests, self.hparams.batch_size):
             start = time()
-
-            edited_model, weights_copy = self.apply_algo(
-                self.model,
-                self.tok,
-                record_chunks,
-                self.hparams,
-                copy=False,
-                return_orig_weights=True,
-                keep_original_weight=keep_original_weight,
-            )
+            if kwargs.get('knb_dict'):
+                knb_dict = kwargs['knb_dict']
+                edited_model, weights_copy = self.apply_algo(
+                    self.model,
+                    self.tok,
+                    [request],
+                    self.hparams,
+                    copy=False,
+                    return_orig_weights=True,
+                    keep_original_weight=False,
+                    train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
+                    knb_dict=knb_dict
+                )
+            else:
+                edited_model, weights_copy = self.apply_algo(
+                    self.model,
+                    self.tok,
+                    record_chunks,
+                    self.hparams,
+                    copy=False,
+                    return_orig_weights=True,
+                    keep_original_weight=keep_original_weight,
+                )
             exec_time = time() - start
             LOG.info(f"Execution editing took {exec_time}")
 
@@ -300,16 +313,30 @@ class BaseEditor:
                     train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None
                 )
             else:
-                edited_model, weights_copy = self.apply_algo(
-                    self.model,
-                    self.tok,
-                    [request],
-                    self.hparams,
-                    copy=False,
-                    return_orig_weights=True,
-                    keep_original_weight=False,
-                    train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None
-                )
+                if kwargs.get('knb_dict'):
+                    knb_dict = kwargs['knb_dict']
+                    edited_model, weights_copy = self.apply_algo(
+                        self.model,
+                        self.tok,
+                        [request],
+                        self.hparams,
+                        copy=False,
+                        return_orig_weights=True,
+                        keep_original_weight=False,
+                        train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
+                        knb_dict=knb_dict
+                    )
+                else:
+                    edited_model, weights_copy = self.apply_algo(
+                        self.model,
+                        self.tok,
+                        [request],
+                        self.hparams,
+                        copy=False,
+                        return_orig_weights=True,
+                        keep_original_weight=False,
+                        train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
+                    )
                 icl_examples = None
             return edited_model, weights_copy, icl_examples
         def edit_evaluation(all_metrics, request, edited_model, idx, eval_metric, test_generation, icl_examples, **kwargs):
