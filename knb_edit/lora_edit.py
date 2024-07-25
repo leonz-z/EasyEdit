@@ -15,9 +15,16 @@ metrics_save_dir = './EasyEditCache/metrics'
 
 datas = KnowEditDataset(data_dir,size=ds_size)
 if data_type == 'counterfact' or data_type == 'recent' or data_type == 'zsre':
-    prompts=[data['prompt'] for data in datas]
-    subjects=[data['subject'] for data in datas]
-    target_new = [data['target_new'] for data in datas]
+    # f"Please answer the question in no more than {answer_len} words!\nQuestion:{query}\nAnswer:"
+    prompts, subjects, target_new = [], [], []
+    for data in datas:
+        subjects.append(data['subject'])
+        target_new.append(data['target_new'])
+        answer_len = len(data['target_new'].split(' '))
+        prompts.append(f"Please answer the question in no more than {answer_len} words!\nQuestion:{data['prompt']}\nAnswer:")
+    # prompts=[data['prompt'] for data in datas]
+    # subjects=[data['subject'] for data in datas]
+    # target_new = [data['target_new'] for data in datas]
     
     portability_r =[data['portability_r'] for data in datas]
     portability_s =[data['portability_s'] for data in datas]
@@ -170,29 +177,49 @@ editor = BaseEditor.from_hparams(hparams)
 # p取值范围 [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 parser = argparse.ArgumentParser()
 parser.add_argument('--type', type=str, default='orgin')
-parser.add_argument('--p', type=float, default=0.5)
+parser.add_argument('--p', type=float, default=99.8)
+parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--num_steps', type=int, default=2)
 args = parser.parse_args()
 
+hparams.batch_size = args.batch_size
+hparams.num_steps = args.num_steps
 type_grad, p = args.type, args.p
 print(f'0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-{str(p)}')
-with open(f'../../knb_dict/0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-{str(p)}.json', 'r') as f:
+with open(f'../../knb_dict/326-llama3/0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}->0-{str(p)}.json', 'r') as f:
     knb_dict = json.load(f)
     
 # 单条数据编辑
-metrics, edited_model, _ = editor.edit(
-    prompts=prompts,
-    target_new=target_new,
-    subject=subjects,
-    locality_inputs=locality_inputs,
-    portability_inputs=portability_inputs,
-    train_ds=train_ds,
-    keep_original_weight=True,
-    pre_file=pre_file,
-    pre_edit = pre_edit,
-    test_generation=True,
-    knb_dict = knb_dict,
-)
+if hparams.batch_size == 1:
+    metrics, edited_model, _ = editor.edit(
+        prompts=prompts,
+        target_new=target_new,
+        subject=subjects,
+        locality_inputs=locality_inputs,
+        portability_inputs=portability_inputs,
+        train_ds=train_ds,
+        keep_original_weight=True,
+        pre_file=pre_file,
+        pre_edit = pre_edit,
+        test_generation=True,
+        knb_dict = knb_dict,
+    )
+else:
+    metrics, edited_model, _ = editor.batch_edit(
+        prompts=prompts,
+        target_new=target_new,
+        subject=subjects,
+        locality_inputs=locality_inputs,
+        portability_inputs=portability_inputs,
+        train_ds=train_ds,
+        keep_original_weight=True,
+        pre_file=pre_file,
+        pre_edit = pre_edit,
+        test_generation=True,
+        knb_dict = knb_dict,
+    )
 
 if not os.path.exists(metrics_save_dir):
     os.makedirs(metrics_save_dir)
-json.dump(metrics, open(os.path.join(metrics_save_dir, f'KNB_LoRA_{data_type}_{ds_size}_{hparams_dir.split("/")[-1]}-{type_grad}-{str(p)}-down_proj_results.json'), 'w'), indent=4)
+json.dump(metrics, open(os.path.join(metrics_save_dir, \
+                                     f'KNB_LoRA_{data_type}_{ds_size}_{hparams_dir.split("/")[-1]}-{type_grad}-{str(p)}-{args.batch_size}-{args.num_steps}-down_proj_results.json'), 'w'), indent=4)

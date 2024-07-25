@@ -217,7 +217,7 @@ class BaseEditor:
                 edited_model, weights_copy = self.apply_algo(
                     self.model,
                     self.tok,
-                    [request],
+                    record_chunks,
                     self.hparams,
                     copy=False,
                     return_orig_weights=True,

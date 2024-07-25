@@ -4,13 +4,29 @@ from typing import Any, Dict, List, Tuple
 # import sys
 # sys.path.append('../../../')
 from .peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
-
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from .lora_hparams import LoRAHyperParams
 
+def gpu_mem_report(func):
+    # gpu_mem=24
+    def wrapper(*args, **kwargs):
+        # mem_used = torch.cuda.memory_allocated() / 1024 ** 3
+        # print(f"before {func.__name__}: {mem_used:.2f} GB {mem_used/gpu_mem*100:.2f}%")
+        res = func(*args, **kwargs)
+        # mem_used = torch.cuda.memory_allocated() / 1024 ** 3
+        # print(f"after {func.__name__}: {mem_used:.2f} GB {mem_used/gpu_mem*100:.2f}%")
+        # print(f"by PyTorch: {torch.cuda.memory_reserved() / 1024 ** 3:.2f} GB {torch.cuda.memory_allocated() / 1024 ** 3 / gpu_mem * 100:.2f}%")
+        torch.cuda.empty_cache()
+        # mem_used = torch.cuda.memory_allocated() / 1024 ** 3
+        # print(f"after empty cache: {mem_used:.2f} GB {mem_used/gpu_mem*100:.2f}%")
+        # print(f"by PyTorch: {torch.cuda.memory_reserved() / 1024 ** 3:.2f} GB {torch.cuda.memory_allocated() / 1024 ** 3 / gpu_mem * 100:.2f}%")
+        
+        return res
+    
+    return wrapper
 
+@gpu_mem_report
 def apply_lora_to_model(
         model: AutoModelForCausalLM,
         tok: AutoTokenizer,
@@ -35,7 +51,28 @@ def apply_lora_to_model(
 
     return edited_model, weights_copy
 
+@gpu_mem_report
+def lora_forward(peft_model, txt, tgt, mask_token, device, tok, loss_meter, opt):
+    full_prompt = [f"{p} {l}" for p, l in zip(txt, tgt)]
+    prompt_ids = tok(list(txt), return_tensors="pt", padding=True, truncation=True)["input_ids"]
+    num_prompt_toks = [int((i != tok.pad_token_id).sum()) for i in prompt_ids]
+    tokens = tok(full_prompt, return_tensors="pt", padding=True, truncation=True)
+    bs = tokens["input_ids"].shape[0]
+    tokens["labels"] = tokens["input_ids"].clone()
+    num_pad_toks = [int((i == tok.pad_token_id).sum()) for i in tokens["labels"]]
+    for i in range(len(txt)):
+        tokens["labels"][i][num_pad_toks[i]:num_pad_toks[i]+num_prompt_toks[i]] = mask_token
+    tokens["labels"][tokens["input_ids"] == tok.pad_token_id] = mask_token
+    tokens = tokens.to(device)
+    pred = peft_model(**tokens)
+    loss = pred.loss
+    print(f"Batch loss {loss.item()}")
+    loss_meter.update(loss.item(), n=bs)
+    # if loss.item() >= 1e-3:
+    loss.backward()
+    opt.step()
 
+@gpu_mem_report
 def execute_lora(
         model: AutoModelForCausalLM,
         tok: AutoTokenizer,
@@ -79,7 +116,7 @@ def execute_lora(
 
     peft_model.is_parallelizable = True
     peft_model.model_parallel = True
-    peft_model.print_trainable_parameters()
+    # peft_model.print_trainable_parameters()
     requests = deepcopy(requests)
     for request in requests:
         print(
@@ -128,6 +165,8 @@ def execute_lora(
                 nll = -avg_log_prob
                 loss = nll
             else:
+                lora_forward(peft_model, txt, tgt, mask_token, device, tok, loss_meter, opt)
+
                 # src_trg_inputs = tok(txt + tgt, return_tensors="pt", padding=True).to(device)
                 # bs = src_trg_inputs["input_ids"].shape[0]
                 # targ = deepcopy(src_trg_inputs['input_ids'])
@@ -140,19 +179,20 @@ def execute_lora(
                 # log_prob = (unmasked_log_probs * mask.float()).sum() / n_tokens
                 # loss = -log_prob
                 # eos_token = tok.decode(tok.eos_token_id)
-                full_prompt = [f"{p} {l}" for p, l in zip(txt, tgt)]
-                prompt_ids = tok(list(txt), return_tensors="pt", padding=True, truncation=True)["input_ids"]
-                num_prompt_toks = [int((i != tok.pad_token_id).sum()) for i in prompt_ids]
-                tokens = tok(full_prompt, return_tensors="pt", padding=True, truncation=True)
-                bs = tokens["input_ids"].shape[0]
-                tokens["labels"] = tokens["input_ids"].clone()
-                num_pad_toks = [int((i == tok.pad_token_id).sum()) for i in tokens["labels"]]
-                for i in range(len(txt)):
-                    tokens["labels"][i][num_pad_toks[i]:num_pad_toks[i]+num_prompt_toks[i]] = mask_token
-                tokens["labels"][tokens["input_ids"] == tok.pad_token_id] = mask_token
-                tokens = tokens.to(device)
-                pred = peft_model(**tokens)
-                loss = pred.loss
+                # full_prompt = [f"{p} {l}" for p, l in zip(txt, tgt)]
+                # prompt_ids = tok(list(txt), return_tensors="pt", padding=True, truncation=True)["input_ids"]
+                # num_prompt_toks = [int((i != tok.pad_token_id).sum()) for i in prompt_ids]
+                # tokens = tok(full_prompt, return_tensors="pt", padding=True, truncation=True)
+                # bs = tokens["input_ids"].shape[0]
+                # tokens["labels"] = tokens["input_ids"].clone()
+                # num_pad_toks = [int((i == tok.pad_token_id).sum()) for i in tokens["labels"]]
+                # for i in range(len(txt)):
+                #     tokens["labels"][i][num_pad_toks[i]:num_pad_toks[i]+num_prompt_toks[i]] = mask_token
+                # tokens["labels"][tokens["input_ids"] == tok.pad_token_id] = mask_token
+                # tokens = tokens.to(device)
+                # pred = peft_model(**tokens)
+                # loss = pred.loss
+                
                 # pred = peft_model(**tokens)
                 # loss = pred.loss
                 # targ = target_ids
@@ -165,24 +205,14 @@ def execute_lora(
                 # unmasked_log_probs = pred.log_softmax(-1).gather(-1, targ.unsqueeze(-1)).squeeze(-1)
                 # log_prob = (unmasked_log_probs * mask.float()).sum() / n_tokens
                 # loss = -log_prob
-            print(f"Batch loss {loss.item()}")
-            loss_meter.update(loss.item(), n=bs)
-
-            # if loss.item() >= 1e-3:
-            loss.backward()
-            opt.step()
-            gpu_cache = torch.cuda.memory_allocated() / 1024 ** 3
-            print(f"GPU:{gpu_cache:.2f}GB {gpu_cache/24*100:.2f}%")
-            torch.cuda.empty_cache()
-            gpu_cache = torch.cuda.memory_allocated() / 1024 ** 3
-            print(f"GPU:{gpu_cache:.2f}GB {gpu_cache/24*100:.2f}%")
+        
         print(f"Total loss {loss_meter.avg}")
 
         # if loss_meter.avg < 1e-3:
         #     break
     return peft_model
 
-
+@gpu_mem_report
 class AverageMeter:
     """Computes and stores the average and current value"""
 
@@ -201,7 +231,7 @@ class AverageMeter:
         self.count += n
         self.avg = self.sum / self.count
 
-
+@gpu_mem_report
 def chunks(arr, n):
     """Yield successive n-sized chunks from arr."""
     chunk = []
