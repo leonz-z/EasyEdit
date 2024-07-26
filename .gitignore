@@ -8,7 +8,7 @@ examples/wiki_recent
 results
 output
 scripts
-peft
+# peft
 # dataset
 logs
 log

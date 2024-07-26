@@ -7,11 +7,21 @@ from easyeditor import LoRAHyperParams
 from easyeditor import BaseEditor
 from easyeditor import KnowEditDataset
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--type', type=str, default='orgin')
+parser.add_argument('--p', type=str, default='90')
+parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--num_steps', type=int, default=2)
+parser.add_argument('--ds_size', type=str, default='326')
+args = parser.parse_args()
+
+type_grad, p = args.type, args.p
+ds_size = args.ds_size if args.ds_size=='all' else int(args.ds_size)
 data_dir = '../dataset/ccks2024_know_edit/ZsRE-test-all.json'
+data_type = 'zsre'
 train_data_path = None
-ds_size, data_type, = 326, 'zsre'
 hparams_dir = '../hparams/LoRA/Meta-Llama-3-8B-Instruct'
-metrics_save_dir = './EasyEditCache/metrics'
+metrics_save_dir = f'./EasyEditCache/metrics/{ds_size}-{data_type}/'
 
 datas = KnowEditDataset(data_dir,size=ds_size)
 if data_type == 'counterfact' or data_type == 'recent' or data_type == 'zsre':
@@ -161,6 +171,8 @@ if data_type == 'wikibio':
     }
 
 hparams = LoRAHyperParams.from_hparams(hparams_dir)
+hparams.batch_size = args.batch_size
+hparams.num_steps = args.num_steps
 pre_file = f"../pre_edit/{hparams.model_name.split('/')[-1]}_{data_type}_pre_edit_{ds_size}.json"
 if pre_file is not None and os.path.exists(pre_file):
     pre_edit = json.load(open(pre_file,'r'))
@@ -171,22 +183,8 @@ else:
 train_ds = None
 
 editor = BaseEditor.from_hparams(hparams)
-
-# 命令行获取type和p参数
-# type取值范围['orgin','abs','square']
-# p取值范围 [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-parser = argparse.ArgumentParser()
-parser.add_argument('--type', type=str, default='orgin')
-parser.add_argument('--p', type=float, default=99.8)
-parser.add_argument('--batch_size', type=int, default=1)
-parser.add_argument('--num_steps', type=int, default=2)
-args = parser.parse_args()
-
-hparams.batch_size = args.batch_size
-hparams.num_steps = args.num_steps
-type_grad, p = args.type, args.p
-print(f'0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-{str(p)}')
-with open(f'../../knb_dict/326-llama3/0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}->0-{str(p)}.json', 'r') as f:
+print(f'{ds_size}-llama3-{data_type}/0-326-{hparams.model_name}-{data_type}-knb_dict-{type_grad}-ge0-{p}.json')
+with open(f'../../knb_dict/{ds_size}-llama3-{data_type}/0-326-{hparams.model_name}-{data_type}-knb_dict-{type_grad}-ge0-{p}.json', 'r') as f:
     knb_dict = json.load(f)
     
 # 单条数据编辑
@@ -221,5 +219,6 @@ else:
 
 if not os.path.exists(metrics_save_dir):
     os.makedirs(metrics_save_dir)
-json.dump(metrics, open(os.path.join(metrics_save_dir, \
-                                     f'KNB_LoRA_{data_type}_{ds_size}_{hparams_dir.split("/")[-1]}-{type_grad}-{str(p)}-{args.batch_size}-{args.num_steps}-down_proj_results.json'), 'w'), indent=4)
+json.dump(metrics, \
+          open(metrics_save_dir + \
+               f'KNB_{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{args.batch_size}_{args.num_steps}_{"_".join(hparams.target_modules)}.json', 'w'), indent=4)

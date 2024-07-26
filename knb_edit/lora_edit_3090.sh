@@ -5,27 +5,32 @@ if [ ! -d "logs/$DATE" ]; then
 fi
 
 source activate ke2torch23cu121
-export CUDA_VISIBLE_DEVICES=0
+# export CUDA_VISIBLE_DEVICES=0
 export HUGGINGFACE_CACHE=/share/huggingface/
+
 type=orgin
-p=99.7
+ds_size=326
 batch_size=2
-num_steps=50
-nohup python lora_edit.py \
+num_steps=300
+
+i=1
+for p in {75,85,95}; do
+    echo "Running $i-th job for p=$p"
+    CUDA_VISIBLE_DEVICES=$i python lora_edit.py \
     --type $type \
     --p $p \
-    --batch_size 2 \
-    --num_steps 50 \
-    > logs/$DATE/llama3-zsre-326-$type-$p-$batch_size-$num_steps-down_proj-1.log 2>&1 &
-
-# type=orgin
-# for p in {0.2,0.1}
-# for p in {0.4,0.3}
-# for p in {0.6,0.5}
-# for p in {0.8,0.7}
-# do
-#     python lora_edit.py \
-#         --type $type \
-#         --p $p \
-#         > logs/$DATE/llama3-zsre-326-$type-$p-down_proj-2.log 2>&1
-# done
+    --batch_size $batch_size \
+    --num_steps $num_steps \
+    --ds_size $ds_size \
+    > logs/$DATE/$ds_size-llama3-zsre-$type-$p-$batch_size-$num_steps-down_proj-1.log 2>&1 &
+    i=$((i+1))
+done
+wait
+# p=60
+# CUDA_VISIBLE_DEVICES=2 python lora_edit.py \
+#     --type $type \
+#     --p $p \
+#     --batch_size $batch_size \
+#     --num_steps $num_steps \
+#     --ds_size $ds_size \
+#     > logs/$DATE/$ds_size-llama3-zsre-$type-$p-$batch_size-$num_steps-down_proj-1.log 2>&1 &
