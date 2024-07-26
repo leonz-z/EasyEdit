@@ -13,17 +13,23 @@ parser.add_argument('--p', type=str, default='90')
 parser.add_argument('--batch_size', type=int, default=1)
 parser.add_argument('--num_steps', type=int, default=2)
 parser.add_argument('--ds_size', type=str, default='326')
+parser.add_argument('--model_name', type=str, default='Meta-Llama-3-8B-Instruct')
+parser.add_argument('--data_type', type=str, default='zsre')
+parser.add_argument('--data_dir', type=str, default='../dataset/ccks2024_know_edit/ZsRE-test-all.json')
 args = parser.parse_args()
 
 type_grad, p = args.type, args.p
-ds_size = args.ds_size if args.ds_size=='all' else int(args.ds_size)
-data_dir = '../dataset/ccks2024_know_edit/ZsRE-test-all.json'
-data_type = 'zsre'
+data_type = args.data_type
+ds_size = args.ds_size
+data_dir = args.data_dir
 train_data_path = None
-hparams_dir = '../hparams/LoRA/Meta-Llama-3-8B-Instruct'
+print(args.model_name)
+hparams_dir = f'../hparams/LoRA/{args.model_name}'
+print(f"hparams_dir: {hparams_dir}")
 metrics_save_dir = f'./EasyEditCache/metrics/{ds_size}-{data_type}/'
 
-datas = KnowEditDataset(data_dir,size=ds_size)
+size =  None if args.ds_size=='all' else int(args.ds_size)
+datas = KnowEditDataset(data_dir, size=size)
 if data_type == 'counterfact' or data_type == 'recent' or data_type == 'zsre':
     # f"Please answer the question in no more than {answer_len} words!\nQuestion:{query}\nAnswer:"
     prompts, subjects, target_new = [], [], []
@@ -62,7 +68,10 @@ if data_type == 'counterfact' or data_type == 'recent' or data_type == 'zsre':
                     prompt=pr["prompt"]
                     an=pr["ground_truth"]
                     while isinstance(an,list):
-                        an = an[0]
+                        if an==[]:
+                            an=''
+                        else:
+                            an = an[0]
                     if an.strip() =="":
                         continue
                     temp_prompts.append(prompt)
@@ -93,7 +102,10 @@ if data_type == 'counterfact' or data_type == 'recent' or data_type == 'zsre':
                     prompt=pr["prompt"]
                     an=pr["ground_truth"]
                     while isinstance(an,list):
-                        an = an[0]
+                        if an==[]:
+                            an=''
+                        else:
+                            an = an[0]
                     if an.strip() =="":
                         continue
                     temp_prompts.append(prompt)
@@ -153,7 +165,10 @@ if data_type == 'wikibio':
                     prompt=pr["prompt"]
                     an=pr["ground_truth"]
                     while isinstance(an,list):
-                        an = an[0]
+                        if an==[]:
+                            an=''
+                        else:
+                            an = an[0]
                     if an.strip() =="":
                         continue
                     temp_prompts.append(prompt)
@@ -173,7 +188,10 @@ if data_type == 'wikibio':
 hparams = LoRAHyperParams.from_hparams(hparams_dir)
 hparams.batch_size = args.batch_size
 hparams.num_steps = args.num_steps
-pre_file = f"../pre_edit/{hparams.model_name.split('/')[-1]}_{data_type}_pre_edit_{ds_size}.json"
+if ds_size is not None:
+    pre_file = f"../pre_edit/{hparams.model_name}_{data_type}_pre_edit_{ds_size}.json"
+else:
+    pre_file = f"../pre_edit/{hparams.model_name}_{data_type}_pre_edit.json"
 if pre_file is not None and os.path.exists(pre_file):
     pre_edit = json.load(open(pre_file,'r'))
     assert len(pre_edit) == len(prompts)
@@ -183,8 +201,8 @@ else:
 train_ds = None
 
 editor = BaseEditor.from_hparams(hparams)
-print(f'{ds_size}-llama3-{data_type}/0-326-{hparams.model_name}-{data_type}-knb_dict-{type_grad}-ge0-{p}.json')
-with open(f'../../knb_dict/{ds_size}-llama3-{data_type}/0-326-{hparams.model_name}-{data_type}-knb_dict-{type_grad}-ge0-{p}.json', 'r') as f:
+print(f'{ds_size}-llama2-{data_type}/{ds_size}-{hparams.model_name}-{data_type}-knb_dict-orgin-{type_grad}-{p}.json')
+with open(f'../../knb_dict/{ds_size}-llama2-{data_type}/{ds_size}-{hparams.model_name}-{data_type}-knb_dict-orgin-{type_grad}-{p}.json', 'r') as f:
     knb_dict = json.load(f)
     
 # 单条数据编辑

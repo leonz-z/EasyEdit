@@ -13,20 +13,28 @@ module load compilers/gcc/12.2.0
 source activate ke2torch23cu121
 
 # export CUDA_VISIBLE_DEVICES=0
-export HUGGINGFACE_CACHE=/home/bingxing2/public/models/llama3/
+export HUGGINGFACE_CACHE=/home/bingxing2/public/models/llama2/
 
-type=orgin
-batch_size=50
-num_steps=100
+type=mean
+ds_size=all
+data_type=counterfact
+batch_size=30
+num_steps=300
+model_name=Llama-2-7b-hf
 i=0
-for p in {91.0,95.0,99.1,99.9}; do
+# for p in {91,95,99.1,99.9}; do
+for p in {93,97,99.3,99.5}; do
     echo "Running $i-th job for p=$p"
     CUDA_VISIBLE_DEVICES=$i python lora_edit.py \
     --type $type \
     --p $p \
     --batch_size $batch_size \
     --num_steps $num_steps \
-    > logs/$DATE/all-llama3-zsre-$type-$p-$batch_size-$num_steps-down_proj-1.log 2>&1 &
+    --ds_size $ds_size \
+    --data_type $data_type \
+    --model_name $model_name \
+    --data_dir ../dataset/KnowEdit-ms/benchmark_wiki_counterfact_test_cf.json \
+    > logs/$DATE/$ds_size-$model_name-$data_type-$type-$p-$batch_size-$num_steps-down_proj-1.log 2>&1 &
     i=$((i+1))
 done
 wait
