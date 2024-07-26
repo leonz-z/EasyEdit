@@ -207,7 +207,7 @@ class BaseEditor:
         # 2024-7-13 locality_inputs portability_inputs
         requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
                                           locality_inputs, portability_inputs, **kwargs)
-
+        torch.cuda.empty_cache()
         assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
         all_metrics = []
         for record_chunks in _chunks(requests, self.hparams.batch_size):
@@ -225,6 +225,7 @@ class BaseEditor:
                     train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
                     knb_dict=knb_dict
                 )
+                torch.cuda.empty_cache()
             else:
                 edited_model, weights_copy = self.apply_algo(
                     self.model,
@@ -248,21 +249,21 @@ class BaseEditor:
                     "time": exec_time,
                     "post": compute_edit_quality(edited_model, self.model_name, self.hparams, self.tok, request, self.hparams.device, test_generation=test_generation),
                 }
-
+                torch.cuda.empty_cache()
                 chunk_metrics.append(metrics)
 
             with torch.no_grad():
                 for k, v in weights_copy.items():
                     nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
-
+            torch.cuda.empty_cache()
             for i, request in enumerate(record_chunks):
                 chunk_metrics[i]["pre"] = compute_edit_quality(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device, test_generation=test_generation)
-
+                torch.cuda.empty_cache()
                 if verbose:
                     LOG.info(
                         f"{i} editing: {request['prompt']} -> {request['target_new']}  \n {chunk_metrics[i]}"
                     )
-
+            
             LOG.info(f"Evaluation took {time() - start}")
             all_metrics.extend(chunk_metrics)
         return all_metrics, edited_model, weights_copy

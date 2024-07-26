@@ -9,7 +9,7 @@ from easyeditor import KnowEditDataset
 
 data_dir = '../dataset/ccks2024_know_edit/ZsRE-test-all.json'
 train_data_path = None
-ds_size, data_type, = 326, 'zsre'
+ds_size, data_type, = None, 'zsre'
 hparams_dir = '../hparams/LoRA/Meta-Llama-3-8B-Instruct'
 metrics_save_dir = './EasyEditCache/metrics'
 
@@ -185,8 +185,8 @@ args = parser.parse_args()
 hparams.batch_size = args.batch_size
 hparams.num_steps = args.num_steps
 type_grad, p = args.type, args.p
-print(f'0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-{str(p)}')
-with open(f'../../knb_dict/326-llama3/0-326-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}->0-{str(p)}.json', 'r') as f:
+print(f'all-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-ge0-{str(p)}')
+with open(f'../../knb_dict/all-llama3-zsre/all-Meta-Llama-3-8B-Instruct-zsre-knb_dict-{type_grad}-ge0-{str(p)}.json', 'r') as f:
     knb_dict = json.load(f)
     
 # 单条数据编辑
@@ -222,4 +222,4 @@ else:
 if not os.path.exists(metrics_save_dir):
     os.makedirs(metrics_save_dir)
 json.dump(metrics, open(os.path.join(metrics_save_dir, \
-                                     f'KNB_LoRA_{data_type}_{ds_size}_{hparams_dir.split("/")[-1]}-{type_grad}-{str(p)}-{args.batch_size}-{args.num_steps}-down_proj_results.json'), 'w'), indent=4)
+                                     f'KNB_LoRA_{data_type}_all_{hparams_dir.split("/")[-1]}-{type_grad}-{str(p)}-{args.batch_size}-{args.num_steps}-down_proj_results.json'), 'w'), indent=4)
