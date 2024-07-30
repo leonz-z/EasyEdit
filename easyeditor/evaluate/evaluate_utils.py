@@ -109,6 +109,8 @@ def test_prediction_acc(model, tok, hparams, prompts, targets, device, locality=
 
     if isinstance(prompts, str):
         prompts,targets = [prompts,], [targets,]
+    if prompts == [] or targets == []:
+        return []
     prompt_target = [prompt + ' ' + target for prompt, target in zip(prompts,targets)]
     max_prompt_len = max([len(tok.encode(_)) for _ in prompt_target]) + 1
     prompt_target_tok = tok(

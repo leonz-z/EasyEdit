@@ -16,6 +16,7 @@ parser.add_argument('--ds_size', type=str, default='326')
 parser.add_argument('--model_name', type=str, default='Meta-Llama-3-8B-Instruct')
 parser.add_argument('--data_type', type=str, default='zsre')
 parser.add_argument('--data_dir', type=str, default='../dataset/ccks2024_know_edit/ZsRE-test-all.json')
+parser.add_argument('--no_prompts', default=False, action='store_true')
 args = parser.parse_args()
 
 type_grad, p = args.type, args.p
@@ -32,15 +33,17 @@ size =  None if args.ds_size=='all' else int(args.ds_size)
 datas = KnowEditDataset(data_dir, size=size)
 if data_type == 'counterfact' or data_type == 'recent' or data_type == 'zsre':
     # f"Please answer the question in no more than {answer_len} words!\nQuestion:{query}\nAnswer:"
-    prompts, subjects, target_new = [], [], []
-    for data in datas:
-        subjects.append(data['subject'])
-        target_new.append(data['target_new'])
-        answer_len = len(data['target_new'].split(' '))
-        prompts.append(f"Please answer the question in no more than {answer_len} words!\nQuestion:{data['prompt']}\nAnswer:")
-    # prompts=[data['prompt'] for data in datas]
-    # subjects=[data['subject'] for data in datas]
-    # target_new = [data['target_new'] for data in datas]
+    if not args.no_prompts:
+        prompts, subjects, target_new = [], [], []
+        for data in datas:
+            subjects.append(data['subject'])
+            target_new.append(data['target_new'])
+            answer_len = len(data['target_new'].split(' '))
+            prompts.append(f"Please answer the question in no more than {answer_len} words!\nQuestion:{data['prompt']}\nAnswer:")
+    else:
+        prompts=[data['prompt'] for data in datas]
+        subjects=[data['subject'] for data in datas]
+        target_new = [data['target_new'] for data in datas]
     
     portability_r =[data['portability_r'] for data in datas]
     portability_s =[data['portability_s'] for data in datas]
@@ -237,6 +240,12 @@ else:
 
 if not os.path.exists(metrics_save_dir):
     os.makedirs(metrics_save_dir)
-json.dump(metrics, \
-          open(metrics_save_dir + \
-               f'KNB_{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{args.batch_size}_{args.num_steps}_{"_".join(hparams.target_modules)}.json', 'w'), indent=4)
+    
+if args.no_prompts:
+    json.dump(metrics, \
+            open(metrics_save_dir + \
+                f'KNB_{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{args.batch_size}_{args.num_steps}_{"_".join(hparams.target_modules)}_no_prompts.json', 'w'), indent=4)
+else:
+    json.dump(metrics, \
+            open(metrics_save_dir + \
+                f'KNB_{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{args.batch_size}_{args.num_steps}_{"_".join(hparams.target_modules)}.json', 'w'), indent=4)

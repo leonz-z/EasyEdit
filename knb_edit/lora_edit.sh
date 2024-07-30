@@ -15,16 +15,33 @@ source activate ke2torch23cu121
 # export CUDA_VISIBLE_DEVICES=0
 export HUGGINGFACE_CACHE=/home/bingxing2/public/models/llama2/
 
-type=mean
+type=max
 ds_size=all
 data_type=counterfact
-batch_size=30
-num_steps=300
+batch_size=80
+# batch_size=70
+# batch_size=60
+# batch_size=50
+# batch_size=40
+# batch_size=30
+# batch_size=20
+# batch_size=10
+num_steps=30
 model_name=Llama-2-7b-hf
 i=0
-# for p in {91,95,99.1,99.9}; do
-for p in {93,97,99.3,99.5}; do
-    echo "Running $i-th job for p=$p"
+
+# for p in {99.2,99.3,99.4,99.5}; do
+# for p in {99.6,99.7,99.8,99.9}; do
+# for p in {99,99.1,99.05,99.15}; do
+# for p in {99.25,99.35,99.45,99.55}; do
+# for p in {99.65,99.75,99.85,99.95}; do
+
+for p in {99,99.05,99.1,99.15}; do
+# for p in {99.2,99.25,99.3,99.35}; do
+# for p in {99.4,99.45,99.5,99.55}; do
+# for p in {99.6,99.65,99.7,99.75}; do
+# for p in {99.8,99.85,99.9,99.95}; do
+    echo "$i batch_size=$batch_size num_steps=$num_steps p=$p"
     CUDA_VISIBLE_DEVICES=$i python lora_edit.py \
     --type $type \
     --p $p \
@@ -34,7 +51,8 @@ for p in {93,97,99.3,99.5}; do
     --data_type $data_type \
     --model_name $model_name \
     --data_dir ../dataset/KnowEdit-ms/benchmark_wiki_counterfact_test_cf.json \
-    > logs/$DATE/$ds_size-$model_name-$data_type-$type-$p-$batch_size-$num_steps-down_proj-1.log 2>&1 &
+    --no_prompts \
+    > logs/$DATE/$ds_size-$model_name-$data_type-$type-$p-$batch_size-$num_steps-down-no-prompts-1.log 2>&1 &
     i=$((i+1))
 done
 wait

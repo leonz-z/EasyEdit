@@ -212,7 +212,7 @@ def execute_lora(
         #     break
     return peft_model
 
-@gpu_mem_report
+
 class AverageMeter:
     """Computes and stores the average and current value"""
 
@@ -231,7 +231,6 @@ class AverageMeter:
         self.count += n
         self.avg = self.sum / self.count
 
-@gpu_mem_report
 def chunks(arr, n):
     """Yield successive n-sized chunks from arr."""
     chunk = []
