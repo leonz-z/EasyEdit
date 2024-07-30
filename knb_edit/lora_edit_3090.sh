@@ -11,18 +11,18 @@ export HUGGINGFACE_CACHE=/share/huggingface/
 type=orgin
 ds_size=326
 batch_size=2
-num_steps=300
+num_steps=50
 
-i=1
-for p in {75,85,95}; do
+i=0
+for p in {99.2,99.4,99.6,99.8}; do
     echo "Running $i-th job for p=$p"
-    CUDA_VISIBLE_DEVICES=$i python lora_edit.py \
+    CUDA_VISIBLE_DEVICES=$i python lora_edit_3090.py \
     --type $type \
     --p $p \
     --batch_size $batch_size \
     --num_steps $num_steps \
     --ds_size $ds_size \
-    > logs/$DATE/$ds_size-llama3-zsre-$type-$p-$batch_size-$num_steps-down_proj-1.log 2>&1 &
+    > logs/$DATE/$ds_size-llama3-zsre-$type-$p-$batch_size-$num_steps-down-1.log 2>&1 &
     i=$((i+1))
 done
 wait
