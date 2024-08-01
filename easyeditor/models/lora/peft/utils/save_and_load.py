@@ -209,6 +209,7 @@ def set_peft_model_state_dict(model, peft_model_state_dict, adapter_name="defaul
 
     if config.peft_type in (
         PeftType.LORA,
+        PeftType.KNB, # cjc@2024-8-1
         PeftType.LOHA,
         PeftType.LOKR,
         PeftType.ADALORA,
@@ -220,6 +221,7 @@ def set_peft_model_state_dict(model, peft_model_state_dict, adapter_name="defaul
         parameter_prefix = {
             PeftType.IA3: "ia3_",
             PeftType.LORA: "lora_",
+            PeftType.KNB: "knb_", # cjc@2024-8-1
             PeftType.ADALORA: "lora_",
             PeftType.LOHA: "hada_",
             PeftType.LOKR: "lokr_",

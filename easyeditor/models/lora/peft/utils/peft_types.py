@@ -49,6 +49,7 @@ class PeftType(str, enum.Enum):
     LOKR = "LOKR"
     OFT = "OFT"
     POLY = "POLY"
+    KNB = "KNB" # cjc@2024-8-1
 
 
 class TaskType(str, enum.Enum):
