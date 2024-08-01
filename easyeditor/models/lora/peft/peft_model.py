@@ -39,6 +39,7 @@ from transformers.utils import PushToHubMixin
 from . import __version__
 from .config import PeftConfig
 from .tuners import (
+    KnbModel, # cjc@2024-8-1
     AdaLoraModel,
     AdaptionPromptModel,
     IA3Model,
@@ -73,7 +74,8 @@ from .utils import (
 
 
 PEFT_TYPE_TO_MODEL_MAPPING = {
-    PeftType.LORA: LoraModel,
+    PeftType.KNB: KnbModel,
+    PeftType.LORA: LoraModel, # cjc@2024-8-1
     PeftType.LOHA: LoHaModel,
     PeftType.LOKR: LoKrModel,
     PeftType.PROMPT_TUNING: PromptEmbedding,

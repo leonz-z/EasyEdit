@@ -48,6 +48,8 @@ from .peft_model import (
 from .tuners import (
     AdaptionPromptConfig,
     AdaptionPromptModel,
+    KnbConfig, # cjc@2024-8-1
+    KnbModel,
     LoraConfig,
     LoftQConfig,
     LoraModel,

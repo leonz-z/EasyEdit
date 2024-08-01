@@ -41,6 +41,8 @@ from .tuners import (
     LoKrModel,
     LoraConfig,
     LoraModel,
+    KnbConfig, # cjc@2024-8-1
+    KnbModel,
     MultitaskPromptTuningConfig,
     OFTConfig,
     OFTModel,
