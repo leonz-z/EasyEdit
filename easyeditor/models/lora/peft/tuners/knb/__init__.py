@@ -14,8 +14,8 @@
 
 # cjc@2024-8-1
 from .config import KnbConfig
-from .layer import Conv2d, Embedding, Linear, KnbLayer
+from .layer import Linear, KnbLayer
 from .model import KnbModel
 
 
-__all__ = ["KnbConfig", "Conv2d", "Embedding", "KnbLayer", "Linear", "KnbModel"]
+__all__ = ["KnbConfig", "KnbLayer", "Linear", "KnbModel"]
