@@ -33,8 +33,8 @@ from peft.tuners.tuners_utils import (
     onload_layer,
     replicate_layers,
 )
-from ....peft.utils import (
-    TRANSFORMERS_MODELS_TO_KNB_TARGET_MODULES_MAPPING, # TODO: 此处从pip安装的peft里面导入
+from .utils import (
+    TRANSFORMERS_MODELS_TO_KNB_TARGET_MODULES_MAPPING,
     ModulesToSaveWrapper,
     _get_submodules,
 )
