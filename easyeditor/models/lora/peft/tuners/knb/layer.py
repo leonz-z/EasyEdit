@@ -37,7 +37,7 @@ class KnbLayer(BaseTunerLayer):
 
     def __init__(self, base_layer: nn.Module, **kwargs) -> None:
         self.base_layer = base_layer
-        self.length = {}
+        self.length = {} # cjc@0802 add length dict key: adapter_name, value: length/knb_idx_list
         self.knb_alpha = {}
         self.scaling = {}
         self.knb_dropout = nn.ModuleDict({})
@@ -52,26 +52,6 @@ class KnbLayer(BaseTunerLayer):
 
         base_layer = self.get_base_layer()
         if isinstance(base_layer, nn.Linear):
-            in_features, out_features = base_layer.in_features, base_layer.out_features
-        elif isinstance(base_layer, nn.Conv2d):
-            in_features, out_features = base_layer.in_channels, base_layer.out_channels
-        elif isinstance(base_layer, nn.Embedding):
-            in_features, out_features = base_layer.num_embeddings, base_layer.embedding_dim
-        elif isinstance(base_layer, Conv1D):
-            in_features, out_features = (
-                base_layer.weight.ds_shape if hasattr(base_layer.weight, "ds_shape") else base_layer.weight.shape
-            )
-        elif hasattr(base_layer, "infeatures") and hasattr(base_layer, "outfeatures"):
-            # QuantLinear
-            in_features, out_features = base_layer.infeatures, base_layer.outfeatures
-        elif hasattr(base_layer, "input_size") and hasattr(base_layer, "output_size"):
-            # Megatron ColumnParallelLinear,RowParallelLinear
-            in_features, out_features = base_layer.input_size, base_layer.output_size
-        elif hasattr(base_layer, "codebooks") and base_layer.__class__.__name__ == "QuantizedLinear":
-            # AQLM QuantLinear
-            in_features, out_features = base_layer.in_features, base_layer.out_features
-        elif hasattr(base_layer, "w_bit") and base_layer.__class__.__name__ == "WQLinear_GEMM":
-            # Awq layers
             in_features, out_features = base_layer.in_features, base_layer.out_features
         else:
             raise ValueError(f"Unsupported layer type {type(base_layer)}")
@@ -95,7 +75,7 @@ class KnbLayer(BaseTunerLayer):
 
         self.knb_dropout.update(nn.ModuleDict({adapter_name: knb_dropout_layer}))
         # Actual trainable parameters
-        # TODO: 可能维度不对 2024-8-1 22:29:45
+        # knb_W: [in_features, length] length -> out_features mask
         self.knb_W[adapter_name] = nn.Linear(self.in_features, length, bias=False)
         if use_rsknb:
             self.scaling[adapter_name] = knb_alpha / math.sqrt(length)
