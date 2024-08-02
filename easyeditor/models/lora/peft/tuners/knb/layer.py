@@ -19,11 +19,8 @@ from typing import Any, Optional, Union
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from transformers.pytorch_utils import Conv1D
 
 from peft.tuners.tuners_utils import BaseTunerLayer, check_adapters_to_merge
-from peft.utils.integrations import dequantize_bnb_weight, gather_params_ctx
 from peft.utils.other import transpose
 
 from .config import KnbConfig
@@ -59,14 +56,18 @@ class KnbLayer(BaseTunerLayer):
         self.in_features = in_features
         self.out_features = out_features
 
-    def update_layer( # add param mask_idx
-        self, adapter_name, length, knb_alpha, knb_dropout, init_knb_weights, use_rsknb, mask_idx=None
+    def update_layer(
+        self, adapter_name, length, knb_alpha, knb_dropout, init_knb_weights, use_rsknb
     ):
         # This code works for linear layers, override for other layer types
+        # TODO:lzc@0802 length=0 torch.empty(0,0)
+        # length<=0,都不会运行到这里
         if length <= 0:
-            raise ValueError(f"`length` should be a positive integer value but the value passed is {length}")
+            # length <= 0 means no KNB, return
+            return 
+            # raise ValueError(f"`length` should be a positive integer value but the value passed is {length}")
 
-        self.length[adapter_name] = length
+        self.length[adapter_name] = length # TODO: cjc@0802 add length dict key: adapter_name, value: length/knb_idx_list
         self.knb_alpha[adapter_name] = knb_alpha
         if knb_dropout > 0.0:
             knb_dropout_layer = nn.Dropout(p=knb_dropout)
@@ -75,8 +76,12 @@ class KnbLayer(BaseTunerLayer):
 
         self.knb_dropout.update(nn.ModuleDict({adapter_name: knb_dropout_layer}))
         # Actual trainable parameters
-        # knb_W: [in_features, length] length -> out_features mask
-        self.knb_W[adapter_name] = nn.Linear(self.in_features, length, bias=False)
+        # TODO:lzc@0802
+        # # knb_W: [in_features, length] length -> out_features knb
+        # self.knb_W[adapter_name] = nn.Linear(self.in_features, length, bias=False)
+        # 知识神经元论文中的梯度归因方法,定位到的kn_idx是下一层的in_features
+        # knb_W: [lenght, out_features] length -> in_features knb
+        self.knb_W[adapter_name] = nn.Linear(length, self.out_features, bias=False)
         if use_rsknb:
             self.scaling[adapter_name] = knb_alpha / math.sqrt(length)
         else:
@@ -85,17 +90,6 @@ class KnbLayer(BaseTunerLayer):
 
         if init_knb_weights:
             self.reset_knb_parameters(adapter_name, init_knb_weights)
-
-        # check weight and qweight (for GPTQ)
-        for weight_name in ("weight", "qweight"):
-            weight = getattr(self.get_base_layer(), weight_name, None)
-            if weight is not None:
-                # the layer is already completely initialized, this is an update
-                if weight.dtype.is_floating_point or weight.dtype.is_complex:
-                    self.to(weight.device, dtype=weight.dtype)
-                else:
-                    self.to(weight.device)
-                break
 
         self.set_adapter(self.active_adapters)
 
@@ -194,11 +188,9 @@ class Linear(nn.Module, KnbLayer):
         self,
         base_layer,
         adapter_name: str,
-        length: int = 0,
         knb_alpha: int = 1,
         knb_dropout: float = 0.0,
         fan_in_fan_out: bool = False,  # Set this to True if the layer to replace stores weight like (fan_in, fan_out)
-        is_target_conv_1d_layer: bool = False,
         init_knb_weights: Union[bool, str] = True,
         use_rsknb: bool = False,
         **kwargs,
@@ -208,27 +200,23 @@ class Linear(nn.Module, KnbLayer):
         self.fan_in_fan_out = fan_in_fan_out
 
         self._active_adapter = adapter_name
-        # add knowledge neurons mask Tensor 0422@cjc
-        self.kn_mask = None
+        # add knowledge neurons idx list cjc@0802
+        self.kn_idx_list = None
         if kwargs.get("target_name") and kwargs.get("knb_dict"):
             target_name=kwargs.get("target_name") # 'transformer.h.0.mlp.c_proj' 'model.layers.0.mlp.up_proj
             knb_dict=kwargs.get("knb_dict")
-            # import re
-            # match = re.match(r".*\.[^.]*\.(\d+)\.", target_name)
-            # layer_id = int(match.group(1))
-            # layer_id = int(target_name.split(".")[2])
-            layer_id = target_name.split(".")[2]
-            if layer_id in knb_dict:
-                mask_idx = knb_dict[layer_id]
-            elif int(layer_id) in knb_dict:
-                mask_idx = knb_dict[int(layer_id)]
-            else:
-                mask_idx = None
-                print(f'{layer_id} not in {knb_dict.keys()}')
-            # add knowledge neurons mask tensor 0422@cjc
-            self.kn_mask = mask_idx
+            # "knb dict"
+            # "knb_dict:key1=weight_name, value1=kn_dict"
+            # "kn_dict:key2=layer_idx, value2=kn_idx_list"
+            weight_name = ".".join(target_name.split(".")[-2:])
+            layer_idx = target_name.split(".")[2]
+            if weight_name in knb_dict and layer_idx in knb_dict[weight_name]:
+                kn_idx_list = knb_dict[weight_name][layer_idx]
+                self.kn_idx_list = kn_idx_list if len(kn_idx_list) > 0 else None
         else:
             print("No target_name or knb_dict found in kwargs")
+        # TODO: lzc@0802 length=0 may cause bug
+        length = len(self.kn_idx_list) if self.kn_idx_list is not None else 0
         self.update_layer(
             adapter_name,
             length,
@@ -237,7 +225,28 @@ class Linear(nn.Module, KnbLayer):
             init_knb_weights=init_knb_weights,
             use_rsknb=use_rsknb,
         )
-        self.is_target_conv_1d_layer = is_target_conv_1d_layer
+    def get_delta_weight(self, active_adapter) -> torch.Tensor:
+        """
+        Compute the delta weight for the given adapter.
+
+        Args:
+            adapter (str):
+                The name of the adapter for which the delta weight should be computed.
+        """
+        device = self.knb_W[active_adapter].weight.device
+        dtype = self.knb_W[active_adapter].weight.dtype
+        # nn.Linear weight = Parameter(torch.empty((out_features, in_features), **factory_kwargs))
+        delta_W = torch.zeros(self.out_features, self.in_features, device=device, dtype=dtype)
+        dim1, dim2 = self.knb_W[active_adapter].weight.shape
+        if self.kn_idx_list is not None:
+            if dim1 < self.out_features and dim2 == self.in_features:
+                delta_W[self.kn_idx_list, :] = self.knb_W[active_adapter].weight
+            elif dim2 < self.in_features and dim1 == self.out_features:
+                delta_W[:, self.kn_idx_list] = self.knb_W[active_adapter].weight
+            return delta_W
+        else:
+            return delta_W # 注意这里返回的是全0张量
+
 
     def merge(self, safe_merge: bool = False, adapter_names: Optional[list[str]] = None) -> None:
         """
@@ -264,7 +273,6 @@ class Linear(nn.Module, KnbLayer):
                     # Note that safe_merge will be slower than the normal merge
                     # because of the copy operation.
                     orig_weights = base_layer.weight.data.clone()
-                    # get_delta_weight需要实现knb版本
                     delta_weight = self.get_delta_weight(active_adapter)
                     orig_weights = orig_weights + delta_weight
 
@@ -297,14 +305,11 @@ class Linear(nn.Module, KnbLayer):
 
     def forward(self, x: torch.Tensor, *args: Any, **kwargs: Any) -> torch.Tensor:
         self._check_forward_args(x, *args, **kwargs)
-        adapter_names = kwargs.pop("adapter_names", None)
 
         if self.disable_adapters:
             if self.merged:
                 self.unmerge()
             result = self.base_layer(x, *args, **kwargs)
-        elif adapter_names is not None:
-            result = self._mixed_batch_forward(x, *args, adapter_names=adapter_names, **kwargs)
         elif self.merged:
             result = self.base_layer(x, *args, **kwargs)
         else:
@@ -317,27 +322,11 @@ class Linear(nn.Module, KnbLayer):
                 dropout = self.knb_dropout[active_adapter]
                 scaling = self.scaling[active_adapter]
                 x = x.to(knb_W.weight.dtype)
-
-                if self.kn_mask is not None:
-                    # TODO: 2024-8-1 22:48:56
-                    # modify 0725@cjc
-                    # delta_w=transpose(lora_B.weight @ lora_A.weight, self.fan_in_fan_out) * scaling
-                    delta_w = self.get_delta_weight(active_adapter) # [4096, 14336]
+                # 维度问题
+                if self.kn_idx_list is not None:
+                    delta_w = self.get_delta_weight(active_adapter) # [out_features, in_features]
                     delta_w = delta_w.to(dtype=x.dtype)
-                    mask = torch.zeros(delta_w.shape, device=delta_w.device, dtype=x.dtype) 
-                    try: # llama
-                        mask[:, self.kn_mask] = 1
-                        delta_w = delta_w * mask
-                        delta_w = delta_w.T # [14336, 4096]
-                        result += (dropout(x) @ delta_w) # [1, 16, 14336]@[14336, 4096] = [1, 16, 14336]
-                    except: # gpt
-                        # 0725@cjc 不同llm维度之间差一个转置
-                        mask[self.kn_mask, :] = 1
-                        delta_w = delta_w * mask
-                        result += (dropout(x) @ delta_w)
-                else:
-                    result = result + lora_B(lora_A(dropout(x))) * scaling
-
+                    result += scaling * (dropout(x) @ delta_w.T) # [batch_size, seq_len, in_features]@[in_features, out_features] = [batch_size, seq_len, out_features]
 
             result = result.to(torch_result_dtype)
 
