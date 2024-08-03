@@ -1,0 +1,17 @@
+alg_name: KNB
+model_name: Llama-2-7b-ms
+device: 0
+
+layers: []
+num_steps: 100
+batch_size: 1
+max_length: 30
+lr: 5e-3
+weight_decay: 0
+kl_factor: 0
+knb_alpha: 32
+knb_dropout: 0.1
+norm_constraint: true
+target_modules: ["down_proj"]  #["up_proj", "down_proj"] #["q_proj", "v_proj"]
+model_parallel: true
+bf16: true
