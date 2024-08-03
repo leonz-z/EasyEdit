@@ -356,7 +356,6 @@ def dispatch_default(
                 "Setting fan_in_fan_out to False."
             )
             kwargs["fan_in_fan_out"] = knb_config.fan_in_fan_out = False
-        kwargs.update(knb_config.loftq_config)
         # add knb_dict to kwargs 0422@cjc
         if knb_config.knb_dict:
             kwargs["knb_dict"] = knb_config.knb_dict
