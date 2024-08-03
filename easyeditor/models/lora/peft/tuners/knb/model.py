@@ -30,14 +30,45 @@ from peft.tuners.tuners_utils import (
     BaseTuner,
     BaseTunerLayer,
     check_target_module_exists,
-    onload_layer,
-    replicate_layers,
 )
-from .utils import (
-    TRANSFORMERS_MODELS_TO_KNB_TARGET_MODULES_MAPPING,
-    ModulesToSaveWrapper,
-    _get_submodules,
-)
+
+from ..tuners_utils import onload_layer, replicate_layers
+
+from peft.utils import ModulesToSaveWrapper, _get_submodules
+
+TRANSFORMERS_MODELS_TO_KNB_TARGET_MODULES_MAPPING = {
+    "t5": ["q", "v"],
+    "mt5": ["q", "v"],
+    "bart": ["q_proj", "v_proj"],
+    "gpt2": ["c_attn"],
+    "bloom": ["query_key_value"],
+    "blip-2": ["q", "v", "q_proj", "v_proj"],
+    "opt": ["q_proj", "v_proj"],
+    "gptj": ["q_proj", "v_proj"],
+    "gpt_neox": ["query_key_value"],
+    "gpt_neo": ["q_proj", "v_proj"],
+    "bert": ["query", "value"],
+    "roberta": ["query", "value"],
+    "xlm-roberta": ["query", "value"],
+    "electra": ["query", "value"],
+    "deberta-v2": ["query_proj", "value_proj"],
+    "deberta": ["in_proj"],
+    "layoutlm": ["query", "value"],
+    "llama": ["q_proj", "v_proj"],
+    "chatglm": ["query_key_value"],
+    "gpt_bigcode": ["c_attn"],
+    "mpt": ["Wqkv"],
+    "RefinedWebModel": ["query_key_value"],
+    "RefinedWeb": ["query_key_value"],
+    "falcon": ["query_key_value"],
+    "btlm": ["c_proj", "c_attn"],
+    "codegen": ["qkv_proj"],
+    "mistral": ["q_proj", "v_proj"],
+    "mixtral": ["q_proj", "v_proj"],
+    "stablelm": ["q_proj", "v_proj"],
+    "phi": ["q_proj", "v_proj", "fc1", "fc2"],
+    "gemma": ["q_proj", "v_proj"],
+}
 
 from .config import KnbConfig
 from .layer import KnbLayer, dispatch_default
