@@ -49,7 +49,6 @@ class KnbConfig(PeftConfig):
         use_rsknb (`bool`):
             When set to True, sets the adapter scaling factor to `knb_alpha/math.sqrt(length)`.
             Otherwise, it will use the original default value of `knb_alpha/length`. 
-            TODO: 注意,每层knb的length是不一样的,后面需要处理
         modules_to_save (`List[str]`):
             List of modules apart from adapter layers to be set as trainable and saved in the final checkpoint.
         init_knb_weights (`bool` | `Literal["gaussian"]`):
