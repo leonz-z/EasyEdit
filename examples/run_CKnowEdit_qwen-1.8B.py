@@ -3,7 +3,7 @@ import os.path
 import sys
 import json
 import random
-sys.path.append('..')
+sys.path.append('/home/lyc/TNTprojectz/KE/EasyEdit')
 from easyeditor import (
     FTHyperParams, 
     IKEHyperParams, 
@@ -25,13 +25,13 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--editing_method', required=True, type=str)
-    parser.add_argument('--hparams_dir', required=True, type=str)
-    parser.add_argument('--data_dir', required=True, type=str)
+    parser.add_argument('--hparams_dir', type=str, default='./hparams/LoRA/Qwen-1_8B-Chat.yaml')
+    parser.add_argument('--data_dir', type=str, default='./dataset/ccks2024_know_edit/ccks-CKnowEdit.json')
     parser.add_argument('--ds_size', default=None, type=int)
-    parser.add_argument('--metrics_save_dir', default='./output', type=str)
+    parser.add_argument('--metrics_save_dir', default='./ccsk2024_output', type=str)
     parser.add_argument('--train_data_path', type=str)
-    parser.add_argument('--pre_file', default='./seq_pre.json', type=str)
-    parser.add_argument('--chinese_ds_type', required=True, type=str)
+    parser.add_argument('--pre_file', default='./pre_edit/xxx.json', type=str)
+    parser.add_argument('--data_type', type=str, default='CKnowEdit')
     args = parser.parse_args()
 
     if args.editing_method == 'FT':
@@ -114,7 +114,8 @@ if __name__ == "__main__":
     }
 
     hparams = editing_hparams.from_hparams(args.hparams_dir)
-    args.pre_file = f"./{args.editing_method}_{hparams.model_name.split('/')[-1]}_{args.datatype}_{args.chinese_ds_type}_pre_edit.json"
+    hparams = editing_hparams.from_hparams(f'./hparams/{args.editing_method}/Qwen-1_8B-Chat.yaml')
+    args.pre_file = f"./{args.editing_method}_{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
     print(args.pre_file)
     if args.pre_file is not None and os.path.exists(args.pre_file):
         pre_edit = json.load(open(args.pre_file,'r'))
@@ -145,4 +146,4 @@ if __name__ == "__main__":
     )
     if not os.path.exists(args.metrics_save_dir):
         os.makedirs(args.metrics_save_dir)
-    json.dump(metrics, open(os.path.join(args.metrics_save_dir, f'{args.editing_method}_{args.datatype}_{hparams.model_name.split("/")[-1]}_{args.chinese_ds_type}_results.json'), 'w'), indent=4)
+    json.dump(metrics, open(os.path.join(args.metrics_save_dir, f'{args.editing_method}_{args.data_type}_{hparams.model_name.split("/")[-1]}_results.json'), 'w'), indent=4)
