@@ -215,8 +215,8 @@ def execute_lora(
                 # log_prob = (unmasked_log_probs * mask.float()).sum() / n_tokens
                 # loss = -log_prob
         
-        if (it+1)%10 == 0 or loss_meter.avg < 1e-3:
-            ckp_path = '/home/lyc/TNTprojectz/KE/EasyEdit/ccsk2024_output/checkpoints/'
+        if (it+1)%20 == 0 or loss_meter.avg < 1e-3:
+            ckp_path = '/share/ccks2024_output/checkpoints/'
             ckp_path += f'{idx}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}_{hparams.batch_size}_{"_".join(hparams.target_modules)}'
             if not os.path.exists(ckp_path):
                 os.makedirs(ckp_path)
