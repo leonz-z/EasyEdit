@@ -1,10 +1,10 @@
 from copy import deepcopy
 import os
 from typing import Any, Dict, List, Tuple
-# from peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
+from peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
 # import sys
 # sys.path.append('../../../')
-from .peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
+# from .peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from .lora_hparams import LoRAHyperParams
@@ -101,10 +101,7 @@ def execute_lora(
     else:
         if kwargs.get('knb_dict'):
             knb_dict = kwargs['knb_dict']
-        else:
-            knb_dict = None
-            print("No knb_dict provided")
-        peft_config = Config(
+            peft_config = Config(
             task_type=TaskType.CAUSAL_LM,
             inference_mode=False,
             r=hparams.rank,
@@ -113,11 +110,20 @@ def execute_lora(
             target_modules=hparams.target_modules, # target_knb
             knb_dict=knb_dict,
         )
+        else:
+            peft_config = Config(
+                task_type=TaskType.CAUSAL_LM,
+                inference_mode=False,
+                r=hparams.rank,
+                lora_alpha=hparams.lora_alpha, lora_dropout=hparams.lora_dropout,
+                layers_to_transform=hparams.layers if len(hparams.layers) > 0 else None,
+                target_modules=hparams.target_modules,
+            )
         peft_model = get_peft_model(model, peft_config)
 
     peft_model.is_parallelizable = True
     peft_model.model_parallel = True
-    # peft_model.print_trainable_parameters()
+    peft_model.print_trainable_parameters()
     requests = deepcopy(requests)
     # for request in requests:
     #     print(
