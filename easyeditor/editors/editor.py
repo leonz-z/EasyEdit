@@ -268,6 +268,88 @@ class BaseEditor:
             all_metrics.extend(chunk_metrics)
         return all_metrics, edited_model, weights_copy
 
+    def batch_edit_new(self,
+                   prompts: List[str],
+                   target_new: List[str],
+                   ground_truth: Optional[List[str]] = None,
+                   rephrase_prompts: Optional[List[str]] = None,
+                   locality_inputs:  Optional[Dict] = None,
+                   portability_inputs: Optional[Dict] = None,
+                   keep_original_weight=False,
+                   verbose=True,
+                   **kwargs
+                   ):
+        """
+        `prompts`: list or str
+            the prompts to edit
+        `ground_truth`: str
+            the ground truth / expected output
+        """
+        assert len(prompts) == len(target_new)
+        test_generation = kwargs['test_generation'] if 'test_generation' in kwargs.keys() else False
+        if ground_truth is not None:
+            if isinstance(ground_truth, str):
+                ground_truth = [ground_truth,]
+            else:
+                assert len(ground_truth) == len(prompts)
+        else: # Default ground truth is <|endoftext|>
+            ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
+
+
+        assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
+        # 2024-7-13 locality_inputs portability_inputs
+        requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
+                                          locality_inputs, portability_inputs, **kwargs)
+        torch.cuda.empty_cache()
+        assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
+        
+        # for record_chunks in _chunks(requests, self.hparams.batch_size):
+        start = time()
+        if kwargs.get('knb_dict'):
+            knb_dict = kwargs['knb_dict']
+            edited_model = self.apply_algo(
+                self.model,
+                self.tok,
+                requests,
+                self.hparams,
+                copy=False,
+                return_orig_weights=True,
+                keep_original_weight=False,
+                train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
+                knb_dict=knb_dict
+            )
+            torch.cuda.empty_cache()
+        else:
+            edited_model = self.apply_algo(
+                self.model,
+                self.tok,
+                requests,
+                self.hparams,
+                copy=False,
+                return_orig_weights=True,
+                keep_original_weight=keep_original_weight,
+            )
+        exec_time = time() - start
+        LOG.info(f"Execution editing took {exec_time}")
+        
+        all_metrics = []
+        if 'pre_edit' in kwargs and kwargs['pre_edit'] is not None:
+            metrics = kwargs['pre_edit']
+            all_metrics = metrics
+        start = time()
+        eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
+        for i, request in enumerate(requests):
+            all_metrics[i].update({
+                "case_id": i,
+                "requested_rewrite": request,
+                "time": exec_time,
+                "post": compute_edit_quality(edited_model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation),
+            })
+            torch.cuda.empty_cache()
+            
+        LOG.info(f"Evaluation took {time() - start}")
+        return all_metrics
+
     def edit_requests(self,
              requests,
              sequential_edit=False,
