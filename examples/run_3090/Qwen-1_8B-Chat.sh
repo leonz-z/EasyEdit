@@ -1,11 +1,15 @@
 DATE=$(date +"%Y-%m-%d")
 mkdir -p logs/$DATE
 source activate ke2torch23cu121
-export CUDA_VISIBLE_DEVICES=0
 export HUGGINGFACE_CACHE=/share/huggingface/
+
+export CUDA_VISIBLE_DEVICES=3
+method=MEMIT
+layers=12,18
 python examples/run_CKnowEdit_qwen-1.8B.py \
-    --editing_method LoRA \
-    > logs/$DATE/LoRA_Qwen-1_8B-Chat-1.log 2>&1 &
+    --editing_method $method \
+    --layers $layers \
+    > logs/$DATE/$method-$layers-Qwen-1_8B-Chat-1.log 2>&1 &
 
 # target_r (`int`): The target average rank of incremental matrix.
 # init_r (`int`): The initial rank for each incremental matrix.

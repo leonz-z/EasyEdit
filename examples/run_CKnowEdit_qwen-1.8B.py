@@ -29,9 +29,10 @@ if __name__ == "__main__":
     parser.add_argument('--data_dir', type=str, default='./dataset/ccks2024_know_edit/ccks-CKnowEdit.json')
     parser.add_argument('--ds_size', default=None, type=int)
     parser.add_argument('--metrics_save_dir', default='./ccsk2024_output', type=str)
-    parser.add_argument('--train_data_path', type=str)
-    parser.add_argument('--pre_file', default='./pre_edit/xxx.json', type=str)
+    parser.add_argument('--train_data_path', type=str, default=None)
+    parser.add_argument('--pre_file', default='./pre_edit/Qwen-1_8B-Chat_CKnowEdit_pre_edit.json', type=str)
     parser.add_argument('--data_type', type=str, default='CKnowEdit')
+    parser.add_argument('--layers', default=None, type=str)
     args = parser.parse_args()
 
     if args.editing_method == 'FT':
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     else:
         raise NotImplementedError
     
-
+    # 加载处理数据
     datas = CKnowEditDataset(args.data_dir,size=args.ds_size)
     prompts=[data['prompt'] for data in datas]
     target_new = [data['target_new'] for data in datas]
@@ -113,12 +114,17 @@ if __name__ == "__main__":
         }       
     }
 
-    hparams = editing_hparams.from_hparams(args.hparams_dir)
     hparams = editing_hparams.from_hparams(f'./hparams/{args.editing_method}/Qwen-1_8B-Chat.yaml')
-    args.pre_file = f"./{args.editing_method}_{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
+    if args.layers is not None:
+        start_layer, end_layer = args.layers.split(',')
+        args.layers = [i for i in range(int(start_layer), int(end_layer))]
+        hparams.layers = args.layers
+        print(f"layers: {hparams.layers}")
+
+    args.pre_file = f"./pre_edit/{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
     print(args.pre_file)
     if args.pre_file is not None and os.path.exists(args.pre_file):
-        pre_edit = json.load(open(args.pre_file,'r'))
+        pre_edit = json.load(open(args.pre_file,'r', encoding='utf-8'))
         assert len(pre_edit) == len(prompts)
     else:
         pre_edit = None
@@ -146,4 +152,10 @@ if __name__ == "__main__":
     )
     if not os.path.exists(args.metrics_save_dir):
         os.makedirs(args.metrics_save_dir)
-    json.dump(metrics, open(os.path.join(args.metrics_save_dir, f'{args.editing_method}_{args.data_type}_{hparams.model_name.split("/")[-1]}_results.json'), 'w'), indent=4)
+    json.dump(metrics, 
+              open(os.path.join(args.metrics_save_dir, 
+                                f'{args.editing_method}_{args.data_type}_{hparams.model_name.split("/")[-1]}_results.json'), 
+                                encoding='utf-8', 
+                                mode='w'), 
+            indent=4,
+            ensure_ascii=False)
