@@ -5,13 +5,16 @@ export HUGGINGFACE_CACHE=/share/huggingface/
 export PYTHONUNBUFFERED=1
 export CUDA_VISIBLE_DEVICES=3
 
+# LoRA
 method=LoRA
-batch_size=50
-cnt=3
+batch_size=25
+num_steps=50
+cnt=1
 python examples/run_CKnowEdit_qwen-1.8B.py \
     --editing_method $method \
     --batch_size $batch_size \
-    > logs/$DATE/$method-$batch_size-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+    --num_steps $num_steps \
+    > logs/$DATE/$method-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
 
 # MEMIT
 # method=MEMIT

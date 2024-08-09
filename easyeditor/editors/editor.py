@@ -604,11 +604,12 @@ class BaseEditor:
             if 'pre_file' in kwargs and kwargs['pre_file'] is not None:
                 json.dump(all_results, open(kwargs['pre_file'], 'w'), indent=4)
 
-        def edit_func(request):
+        def edit_func(request, idx):
             if not isinstance(request, list):
                 request = [request]
             if self.alg_name == 'IKE':
                 edited_model, weights_copy, icl_examples = self.model, {}, self.apply_algo(
+                    idx,
                     self.model,
                     self.tok,
                     request,
@@ -620,6 +621,7 @@ class BaseEditor:
                 )
             else:
                 edited_model, weights_copy = self.apply_algo(
+                    idx,
                     self.model,
                     self.tok,
                     request,
@@ -678,7 +680,7 @@ class BaseEditor:
             assert len(requests) % self.hparams.batch_size == 0, f"batch_size:{self.hparams.batch_size} len(requests):{len(requests)}"
             for idx in range(0, len(requests), self.hparams.batch_size):
                 request_batch = requests[idx:idx+self.hparams.batch_size]
-                edited_model, weights_copy, icl_examples = edit_func(request_batch)
+                edited_model, weights_copy, icl_examples = edit_func(request_batch, idx)
                 # batch edit后暂不评测
                 if not is_post_metrics:
                     continue

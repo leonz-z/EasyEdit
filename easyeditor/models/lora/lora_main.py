@@ -12,16 +12,8 @@ from .lora_hparams import LoRAHyperParams
 def gpu_mem_report(func):
     # gpu_mem=24
     def wrapper(*args, **kwargs):
-        # mem_used = torch.cuda.memory_allocated() / 1024 ** 3
-        # print(f"before {func.__name__}: {mem_used:.2f} GB {mem_used/gpu_mem*100:.2f}%")
         res = func(*args, **kwargs)
-        # mem_used = torch.cuda.memory_allocated() / 1024 ** 3
-        # print(f"after {func.__name__}: {mem_used:.2f} GB {mem_used/gpu_mem*100:.2f}%")
-        # print(f"by PyTorch: {torch.cuda.memory_reserved() / 1024 ** 3:.2f} GB {torch.cuda.memory_allocated() / 1024 ** 3 / gpu_mem * 100:.2f}%")
         torch.cuda.empty_cache()
-        # mem_used = torch.cuda.memory_allocated() / 1024 ** 3
-        # print(f"after empty cache: {mem_used:.2f} GB {mem_used/gpu_mem*100:.2f}%")
-        # print(f"by PyTorch: {torch.cuda.memory_reserved() / 1024 ** 3:.2f} GB {torch.cuda.memory_allocated() / 1024 ** 3 / gpu_mem * 100:.2f}%")
         
         return res
     
@@ -29,6 +21,7 @@ def gpu_mem_report(func):
 
 @gpu_mem_report
 def apply_lora_to_model(
+        idx,
         model: AutoModelForCausalLM,
         tok: AutoTokenizer,
         requests: List[Dict],
@@ -44,16 +37,20 @@ def apply_lora_to_model(
         Note that you are responsible for deallocating the new model's memory to avoid leaks.
     :return: (1) the updated model, (2) the weights that changed
     """
-    weights_copy = {}
-    if copy:
-        model = deepcopy(model)
+    # weights_copy = {}
+    # if copy:
+    #     model = deepcopy(model)
 
-    edited_model = execute_lora(model, tok, requests, hparams, keep_original_weight, **kwargs)
+    # edited_model = execute_lora(idx, model, tok, requests, hparams, keep_original_weight, **kwargs)
+    execute_lora(idx, model, tok, requests, hparams, keep_original_weight, **kwargs)
 
-    return edited_model, weights_copy
+    # return edited_model, weights_copy
+    return None, None
 
 @gpu_mem_report
-def lora_forward(peft_model, txt, tgt, mask_token, device, tok, loss_meter, opt):
+def lora_forward(peft_model, txt, tgt, device, tok, loss_meter, opt):
+    mask_token = -100
+    opt.zero_grad()
     full_prompt = [f"{p} {l}" for p, l in zip(txt, tgt)]
     prompt_ids = tok(list(txt), return_tensors="pt", padding=True, truncation=True)["input_ids"]
     num_prompt_toks = [int((i != tok.pad_token_id).sum()) for i in prompt_ids]
@@ -75,6 +72,7 @@ def lora_forward(peft_model, txt, tgt, mask_token, device, tok, loss_meter, opt)
 
 @gpu_mem_report
 def execute_lora(
+        idx,
         model: AutoModelForCausalLM,
         tok: AutoTokenizer,
         requests: List[Dict],
@@ -111,6 +109,7 @@ def execute_lora(
             knb_dict=knb_dict,
         )
         else:
+            # kwargs = {}
             peft_config = Config(
                 task_type=TaskType.CAUSAL_LM,
                 inference_mode=False,
@@ -118,12 +117,15 @@ def execute_lora(
                 lora_alpha=hparams.lora_alpha, lora_dropout=hparams.lora_dropout,
                 layers_to_transform=hparams.layers if len(hparams.layers) > 0 else None,
                 target_modules=hparams.target_modules,
+                # **kwargs, # AdaLoRA的超参数
             )
         peft_model = get_peft_model(model, peft_config)
 
     peft_model.is_parallelizable = True
     peft_model.model_parallel = True
-    peft_model.print_trainable_parameters()
+    # 第一次能使用, 第二次就不能用了
+    # AttributeError: 'QWenLMHeadModel' object has no attribute 'print_trainable_parameters'
+    # peft_model.print_trainable_parameters()
     requests = deepcopy(requests)
     # for request in requests:
     #     print(
@@ -155,9 +157,9 @@ def execute_lora(
         for txt, tgt in zip(
                 chunks(texts, hparams.batch_size), chunks(targets, hparams.batch_size)
         ):
-            mask_token = -100
-            opt.zero_grad()
             if 't5' in hparams.model_name.lower():
+                mask_token = -100
+                opt.zero_grad()
                 inputs = tok(txt, return_tensors="pt", padding=True).to(device)
                 bs = inputs["input_ids"].shape[0]
                 target_ids = tok(tgt, return_tensors="pt", padding=True)["input_ids"].to(
@@ -172,7 +174,7 @@ def execute_lora(
                 nll = -avg_log_prob
                 loss = nll
             else:
-                lora_forward(peft_model, txt, tgt, mask_token, device, tok, loss_meter, opt)
+                lora_forward(peft_model, txt, tgt, device, tok, loss_meter, opt)
 
                 # src_trg_inputs = tok(txt + tgt, return_tensors="pt", padding=True).to(device)
                 # bs = src_trg_inputs["input_ids"].shape[0]
@@ -214,8 +216,8 @@ def execute_lora(
                 # loss = -log_prob
         
         if (it+1)%10 == 0 or loss_meter.avg < 1e-3:
-            ckp_path = './EasyEditCache/checkpoint/'
-            ckp_path += f'{it+1}_{hparams.alg_name}_KNB_counterfact_all_{hparams.model_name}_max_99.85_{hparams.batch_size}_{"_".join(hparams.target_modules)}'
+            ckp_path = '/home/lyc/TNTprojectz/KE/EasyEdit/ccsk2024_output/checkpoints/'
+            ckp_path += f'{idx}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}_{hparams.batch_size}_{"_".join(hparams.target_modules)}'
             if not os.path.exists(ckp_path):
                 os.makedirs(ckp_path)
             peft_model.save_pretrained(ckp_path)                
@@ -223,7 +225,7 @@ def execute_lora(
         print(f"Epoch: {it} Total loss {loss_meter.avg}")
         if loss_meter.avg < 1e-3:
             break
-    return peft_model
+    # return peft_model
 
 
 class AverageMeter:

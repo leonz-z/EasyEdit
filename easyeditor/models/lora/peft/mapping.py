@@ -73,6 +73,7 @@ PEFT_TYPE_TO_CONFIG_MAPPING: dict[str, PeftConfig] = {
     "PROMPT_TUNING": PromptTuningConfig,
     "PREFIX_TUNING": PrefixTuningConfig,
     "P_TUNING": PromptEncoderConfig,
+    "KNB": KnbConfig, # lzc@2024-8-8
     "LORA": LoraConfig,
     "LOHA": LoHaConfig,
     "LOKR": LoKrConfig,
@@ -84,6 +85,7 @@ PEFT_TYPE_TO_CONFIG_MAPPING: dict[str, PeftConfig] = {
 }
 
 PEFT_TYPE_TO_TUNER_MAPPING = {
+    "KNB": KnbModel, # lzc@2024-8-8
     "LORA": LoraModel,
     "LOHA": LoHaModel,
     "LOKR": LoKrModel,

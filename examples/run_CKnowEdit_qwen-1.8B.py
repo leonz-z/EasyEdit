@@ -34,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_type', type=str, default='CKnowEdit')
     parser.add_argument('--layers', default=None, type=str)
     parser.add_argument('--batch_size', default=None, type=int)
+    parser.add_argument('--num_steps', default=None, type=int)
     args = parser.parse_args()
 
     if args.editing_method == 'FT':
@@ -123,7 +124,10 @@ if __name__ == "__main__":
         args.layers = [i for i in range(int(start_layer), int(end_layer))]
         hparams.layers = args.layers
         print(f"layers: {hparams.layers}")
-
+    if args.num_steps is not None:
+        hparams.num_steps = args.num_steps
+    if args.batch_size is not None:
+        hparams.batch_size = args.batch_size
     args.pre_file = f"{prefix_path}/pre_edit/{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
     print(args.pre_file)
     if args.pre_file is not None and os.path.exists(args.pre_file):
@@ -140,8 +144,6 @@ if __name__ == "__main__":
         train_ds = None
     # 编辑模型
     editor = BaseEditor.from_hparams(hparams)
-    if args.batch_size is not None:
-        hparams.batch_size = args.batch_size
     metrics, edited_model, _ = editor.generate_edit(
         prompts=prompts,
         target_new=target_new,
