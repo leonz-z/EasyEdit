@@ -1,0 +1,3 @@
+cuda-12.1 loaded successful
+gcc-12.2.0 loaded successful
+0 batch_size=60 num_steps=50 p=99.85

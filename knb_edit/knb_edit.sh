@@ -11,4 +11,4 @@ module load cudnn/8.9.5.29_cuda12.x
 module load compilers/gcc/12.2.0
 source activate ke2torch23cu121
 
-python knb_edit.py > logs/$DATE/knb-edit-llama2-max-bs60-steps50-1.log 2>&1
+python knb_edit.py > logs/$DATE/knb-edit-llama2-max-99.85-bs90-epoch100-1.log 2>&1

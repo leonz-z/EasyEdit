@@ -192,16 +192,13 @@ def apply_knb_to_model(
         Note that you are responsible for deallocating the new model's memory to avoid leaks.
     :return: (1) the updated model, (2) the weights that changed
     """
-    weights_copy = {}
-    if copy:
-        model = deepcopy(model)
 
-    edited_model = execute_knb(model, tok, requests, hparams, keep_original_weight, **kwargs)
-
-    return edited_model, weights_copy
+    execute_knb(model, tok, requests, hparams, keep_original_weight, **kwargs)
 
 @gpu_mem_report
-def knb_forward(peft_model, txt, tgt, mask_token, device, tok, loss_meter, opt):
+def knb_forward(peft_model, txt, tgt, device, tok, loss_meter, opt):
+    mask_token = -100
+    opt.zero_grad()
     full_prompt = [f"{p} {l}" for p, l in zip(txt, tgt)]
     tok.pad_token = tok.eos_token
     prompt_ids = tok(list(txt), return_tensors="pt", padding=True, truncation=True)["input_ids"]
@@ -230,7 +227,7 @@ def execute_knb(
         hparams: KNBHyperParams, # type: ignore
         keep_original_weight=False,
         **kwargs: Any,
-) -> Dict[str, Tuple[torch.Tensor]]:
+):
     """
     Executes the Lora update algorithm for the specified update at the specified layer
     Invariant: model at beginning of function == model at end of function
@@ -261,13 +258,9 @@ def execute_knb(
 
     peft_model.is_parallelizable = True
     peft_model.model_parallel = True
-    # peft_model.print_trainable_parameters()
-    requests = deepcopy(requests) # 训练log中观察到每次request都是一个batch_size大小
-    for request in requests:
-        print(
-            f"Executing KNB algo for: "
-            f"[{request['prompt']}] -> [{request['target_new']}]"
-        )
+    peft_model.print_trainable_parameters()
+    requests = deepcopy(requests)
+
     device = torch.device(f'cuda:{hparams.device}')
     print(f"Using device: {device}")
     # Define inputs
@@ -290,18 +283,41 @@ def execute_knb(
         print(20 * "=")
         loss_meter.reset()
 
-        for txt, tgt in zip( # 输入数据为batch_size条,只循环一次
-                chunks(texts, hparams.batch_size), chunks(targets, hparams.batch_size)
-        ):
-            mask_token = -100
-            opt.zero_grad()
-            knb_forward(peft_model, txt, tgt, mask_token, device, tok, loss_meter, opt)
+        for txt, tgt in zip(chunks(texts, hparams.batch_size), chunks(targets, hparams.batch_size)):
+            knb_forward(peft_model, txt, tgt, device, tok, loss_meter, opt)
+            # mask_token = -100
+            # opt.zero_grad()
+            # full_prompt = [f"{p} {l}" for p, l in zip(txt, tgt)]
+            # tok.pad_token = tok.eos_token
+            # prompt_ids = tok(list(txt), return_tensors="pt", padding=True, truncation=True)["input_ids"]
+            # num_prompt_toks = [int((i != tok.pad_token_id).sum()) for i in prompt_ids]
+            # tokens = tok(full_prompt, return_tensors="pt", padding=True, truncation=True)
+            # bs = tokens["input_ids"].shape[0]
+            # tokens["labels"] = tokens["input_ids"].clone()
+            # num_pad_toks = [int((i == tok.pad_token_id).sum()) for i in tokens["labels"]]
+            # for i in range(len(txt)):
+            #     tokens["labels"][i][num_pad_toks[i]:num_pad_toks[i]+num_prompt_toks[i]] = mask_token
+            # tokens["labels"][tokens["input_ids"] == tok.pad_token_id] = mask_token
+            # tokens = tokens.to(device)
+            # pred = peft_model(**tokens)
+            # loss = pred.loss
+            # logit = pred.logits
+            # print(f"Batch loss {loss.item()}")
+            # loss_meter.update(loss.item(), n=bs)
+            # loss.backward()
+            # opt.step()
+            
+        if (it+1)%10 == 0 or loss_meter.avg < 1e-3:
+            ckp_path = './EasyEditCache/checkpoint/'
+            ckp_path += f'{it+1}_{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{hparams.batch_size}_{"_".join(hparams.target_modules)}'
+            if not os.path.exists(ckp_path):
+                os.makedirs(ckp_path)
+            peft_model.save_pretrained(ckp_path)                
         
-        print(f"Total loss {loss_meter.avg}")
-
-        # if loss_meter.avg < 1e-3:
-        #     break
-    return peft_model
+        print(f"Epoch: {it} Total loss {loss_meter.avg}")
+        if loss_meter.avg < 1e-3:
+            break
+        
 
 # %%
 def _prepare_requests(prompts: Union[str, List[str]],
@@ -436,62 +452,52 @@ def batch_edit(hparams: HyperParams,
     else: # Default ground truth is <|endoftext|>
         ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
 
-
-    # 2024-7-13 locality_inputs portability_inputs
+    # locality_inputs portability_inputs
     requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
                                         locality_inputs, portability_inputs, **kwargs)
     torch.cuda.empty_cache()
     assert hasattr(hparams, 'batch_size'), f'Method {hparams.alg_name} found, pls specify the batch_size....'
-    all_metrics = []
-    for record_chunks in _chunks(requests, hparams.batch_size):
-        start = time.time()
-        if kwargs.get('knb_dict'):
-            knb_dict = kwargs['knb_dict']
-            edited_model, weights_copy = apply_knb_to_model(
-                model,
-                tok,
-                record_chunks,
-                hparams,
-                copy=False,
-                return_orig_weights=True,
-                keep_original_weight=False,
-                knb_dict=knb_dict
-            )
-            torch.cuda.empty_cache()
-        else:
-            print('no knb_dict, use default LoRA')
-            return None, None, None
-        exec_time = time.time() - start
-        LOG.info(f"Execution editing took {exec_time}")
-
-        start = time.time()
-        chunk_metrics = []
-        for i, request in enumerate(record_chunks):
-
-            metrics = {
-                'case_id': i,
-                "requested_rewrite": request,
-                "time": exec_time,
-                "post": compute_edit_quality(edited_model, hparams.model_name, hparams, tok, request, hparams.device, test_generation=test_generation),
-            }
-            torch.cuda.empty_cache()
-            chunk_metrics.append(metrics)
-
-        with torch.no_grad():
-            for k, v in weights_copy.items():
-                nethook.get_parameter(model, k)[...] = v.to(f"cuda:{hparams.device}")
+    
+    start = time.time()
+    if kwargs.get('knb_dict'):
+        knb_dict = kwargs['knb_dict']
+        execute_knb(model, tok, requests, hparams, keep_original_weight=False, knb_dict=knb_dict)
         torch.cuda.empty_cache()
-        for i, request in enumerate(record_chunks):
-            chunk_metrics[i]["pre"] = compute_edit_quality(model, hparams.model_name, hparams, tok, request, hparams.device, test_generation=test_generation)
-            torch.cuda.empty_cache()
-            if verbose:
-                LOG.info(
-                    f"{i} editing: {request['prompt']} -> {request['target_new']}  \n {chunk_metrics[i]}"
-                )
-        
-        LOG.info(f"Evaluation took {time.time() - start}")
-        all_metrics.extend(chunk_metrics)
-    return all_metrics, edited_model, weights_copy
+    else:
+        print('no knb_dict, use default LoRA')
+        return None, None
+    exec_time = time.time() - start
+    LOG.info(f"Execution editing took {exec_time/(60*60)}")
+
+
+# def post_metric():
+#     start = time.time()
+#     chunk_metrics = []
+#     for i, request in enumerate(record_chunks):
+
+#         metrics = {
+#             'case_id': i,
+#             "requested_rewrite": request,
+#             "time": exec_time,
+#             "post": compute_edit_quality(edited_model, hparams.model_name, hparams, tok, request, hparams.device, test_generation=test_generation),
+#         }
+#         torch.cuda.empty_cache()
+#         chunk_metrics.append(metrics)
+
+#     with torch.no_grad():
+#         for k, v in weights_copy.items():
+#             nethook.get_parameter(model, k)[...] = v.to(f"cuda:{hparams.device}")
+#     torch.cuda.empty_cache()
+#     for i, request in enumerate(record_chunks):
+#         chunk_metrics[i]["pre"] = compute_edit_quality(model, hparams.model_name, hparams, tok, request, hparams.device, test_generation=test_generation)
+#         torch.cuda.empty_cache()
+#         if verbose:
+#             LOG.info(
+#                 f"{i} editing: {request['prompt']} -> {request['target_new']}  \n {chunk_metrics[i]}"
+#             )
+    
+#     LOG.info(f"Evaluation took {time.time() - start}")
+#     all_metrics.extend(chunk_metrics)
 
 # %% [markdown]
 # 加载数据
@@ -685,8 +691,11 @@ tok = AutoTokenizer.from_pretrained(path+model_name)
 
 # %%
 hparams = KNBHyperParams.from_hparams(hparams_dir)
-hparams.batch_size = 60
-hparams.num_steps = 50
+hparams.batch_size = 90
+hparams.num_steps = 100
+hparams.knb_alpha = 1
+hparams.knb_dropout = 0
+
 if ds_size is not None:
     pre_file = f"../pre_edit/{hparams.model_name}_{data_type}_pre_edit_{ds_size}.json"
 else:
@@ -700,8 +709,6 @@ else:
 train_ds = None
 with open(f'../../knb_dict/all-llama2-{data_type}/all-Llama-2-7b-hf-{data_type}-knb_dict-orgin-{type_grad}-{p}.json', 'r') as f:
     knb_dict = json.load(f)
-
-# %%
 knb_dict_new = {
     'mlp.down_proj': knb_dict
 }
@@ -710,13 +717,14 @@ knb_dict_new = {
 # 执行编辑
 
 # %%
-metrics, edited_model, _ = batch_edit(
+batch_edit(
     hparams=hparams,
     model=model,
     tok=tok,
     prompts=prompts,
     target_new=target_new,
     subject=subjects,
+    ground_truth=ground_truth,
     locality_inputs=locality_inputs,
     portability_inputs=portability_inputs,
     train_ds=train_ds,
@@ -728,16 +736,16 @@ metrics, edited_model, _ = batch_edit(
 )    
 
 # %%
-if not os.path.exists(metrics_save_dir):
-    os.makedirs(metrics_save_dir)
+# if not os.path.exists(metrics_save_dir):
+#     os.makedirs(metrics_save_dir)
     
-if hparams.no_prompts:
-    json.dump(metrics, \
-            open(metrics_save_dir + \
-                f'KNB_{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{hparams.batch_size}_{hparams.num_steps}_{"_".join(hparams.target_modules)}_no_prompts.json', 'w'), indent=4)
-else:
-    json.dump(metrics, \
-            open(metrics_save_dir + \
-                f'KNB_{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{hparams.batch_size}_{hparams.num_steps}_{"_".join(hparams.target_modules)}.json', 'w'), indent=4)
+# if hparams.no_prompts:
+#     json.dump(metrics, \
+#             open(metrics_save_dir + \
+#                 f'{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{hparams.batch_size}_{hparams.num_steps}_{"_".join(hparams.target_modules)}_no_prompts.json', 'w'), indent=4)
+# else:
+#     json.dump(metrics, \
+#             open(metrics_save_dir + \
+#                 f'{hparams.alg_name}_{data_type}_{ds_size}_{hparams.model_name}_{type_grad}_{p}_{hparams.batch_size}_{hparams.num_steps}_{"_".join(hparams.target_modules)}.json', 'w'), indent=4)
 
 

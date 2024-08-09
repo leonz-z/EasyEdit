@@ -1,4 +1,5 @@
 from copy import deepcopy
+import os
 from typing import Any, Dict, List, Tuple
 from peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
 # import sys
@@ -124,11 +125,11 @@ def execute_lora(
     peft_model.model_parallel = True
     peft_model.print_trainable_parameters()
     requests = deepcopy(requests)
-    for request in requests:
-        print(
-            f"Executing LoRA algo for: "
-            f"[{request['prompt']}] -> [{request['target_new']}]"
-        )
+    # for request in requests:
+    #     print(
+    #         f"Executing LoRA algo for: "
+    #         f"[{request['prompt']}] -> [{request['target_new']}]"
+    #     )
     device = torch.device(f'cuda:{hparams.device}')
     print(f"Using device: {device}")
     # Define inputs
@@ -212,10 +213,16 @@ def execute_lora(
                 # log_prob = (unmasked_log_probs * mask.float()).sum() / n_tokens
                 # loss = -log_prob
         
-        print(f"Total loss {loss_meter.avg}")
-
-        # if loss_meter.avg < 1e-3:
-        #     break
+        if (it+1)%10 == 0 or loss_meter.avg < 1e-3:
+            ckp_path = './EasyEditCache/checkpoint/'
+            ckp_path += f'{it+1}_{hparams.alg_name}_KNB_counterfact_all_{hparams.model_name}_max_99.85_{hparams.batch_size}_{"_".join(hparams.target_modules)}'
+            if not os.path.exists(ckp_path):
+                os.makedirs(ckp_path)
+            peft_model.save_pretrained(ckp_path)                
+        
+        print(f"Epoch: {it} Total loss {loss_meter.avg}")
+        if loss_meter.avg < 1e-3:
+            break
     return peft_model
 
 

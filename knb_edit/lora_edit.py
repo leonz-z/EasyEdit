@@ -27,7 +27,7 @@ train_data_path = None
 print(args.model_name)
 hparams_dir = f'../hparams/LoRA/{args.model_name}'
 print(f"hparams_dir: {hparams_dir}")
-metrics_save_dir = f'./EasyEditCache/metrics/{ds_size}-{data_type}/'
+metrics_save_dir = f'./EasyEditCache/metrics/{ds_size}-{data_type}-all-edit/'
 
 size =  None if args.ds_size=='all' else int(args.ds_size)
 datas = KnowEditDataset(data_dir, size=size)
