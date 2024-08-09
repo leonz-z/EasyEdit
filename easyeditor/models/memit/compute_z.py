@@ -47,7 +47,16 @@ def compute_z(
         for context in context_types
     ], ["{} is a"]
     all_prompts = rewriting_prompts + kl_prompts
-
+    # fix lzc@2024-8-9 ValueError: cannot switch from automatic field numbering to manual field specification
+    all_prompts_new = []
+    for prompt in all_prompts:
+        try:
+            prompt_new = prompt.format(request["subject"])
+        except ValueError as e:
+            print(f'compute_z->{e}')
+            prompt_new = prompt.replace(r'{}', request["subject"])
+        all_prompts_new.append(prompt_new)
+    
     input_tok = tok(
         [prompt.format(request["subject"]) for prompt in all_prompts],
         return_tensors="pt",
