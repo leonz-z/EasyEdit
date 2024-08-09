@@ -8,7 +8,7 @@ export CUDA_VISIBLE_DEVICES=3
 # LoRA
 method=LoRA
 batch_size=25
-num_steps=50
+num_steps=60
 cnt=1
 python examples/run_CKnowEdit_qwen-1.8B.py \
     --editing_method $method \
