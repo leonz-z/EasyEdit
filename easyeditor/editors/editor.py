@@ -536,6 +536,7 @@ class BaseEditor:
         portability_inputs: Optional[Dict] = None,
         sequential_edit=False,
         verbose=True,
+        is_post_metrics: bool = False,
         **kwargs
     ):
         eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
@@ -673,11 +674,14 @@ class BaseEditor:
             for i, request in enumerate(requests):
                 post_edit_results(all_results, request, edited_model, i, eval_metric, test_generation, icl_examples, **kwargs)
         else:
-            # for i, request in enumerate(tqdm(requests, total=len(requests))):
+            # batch edit
             assert len(requests) % self.hparams.batch_size == 0, f"batch_size:{self.hparams.batch_size} len(requests):{len(requests)}"
             for idx in range(0, len(requests), self.hparams.batch_size):
                 request_batch = requests[idx:idx+self.hparams.batch_size]
                 edited_model, weights_copy, icl_examples = edit_func(request_batch)
+                # batch edit后暂不评测
+                if not is_post_metrics:
+                    continue
                 post_edit_results(all_results, request_batch, edited_model, idx, eval_metric, test_generation, icl_examples, **kwargs)
                 if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
                     with torch.no_grad():
@@ -696,8 +700,9 @@ class BaseEditor:
 
         if isinstance(edited_model, LORA):
             edited_model = edited_model.model
-        if len(all_results) != 0:
-            summary_metrics(all_results)
+        if is_post_metrics:
+            if len(all_results) != 0:
+                summary_metrics(all_results)
 
         return all_results, edited_model, weights_copy
 
