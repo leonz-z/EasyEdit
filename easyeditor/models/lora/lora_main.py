@@ -1,7 +1,7 @@
 from copy import deepcopy
 import os
 from typing import Any, Dict, List, Tuple
-from peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
+from peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig, PeftModel
 # import sys
 # sys.path.append('../../../')
 # from .peft import get_peft_model, AdaLoraConfig, TaskType, get_peft_model_state_dict, set_peft_model_state_dict, LoraConfig
@@ -37,15 +37,13 @@ def apply_lora_to_model(
         Note that you are responsible for deallocating the new model's memory to avoid leaks.
     :return: (1) the updated model, (2) the weights that changed
     """
-    # weights_copy = {}
-    # if copy:
-    #     model = deepcopy(model)
+    weights_copy = {}
+    if copy:
+        model = deepcopy(model)
 
-    # edited_model = execute_lora(idx, model, tok, requests, hparams, keep_original_weight, **kwargs)
-    execute_lora(idx, model, tok, requests, hparams, keep_original_weight, **kwargs)
-
-    # return edited_model, weights_copy
-    return None, None
+    edited_model = execute_lora(idx, model, tok, requests, hparams, keep_original_weight, **kwargs)
+    
+    return edited_model, weights_copy
 
 @gpu_mem_report
 def lora_forward(peft_model, txt, tgt, device, tok, loss_meter, opt):
@@ -72,11 +70,11 @@ def lora_forward(peft_model, txt, tgt, device, tok, loss_meter, opt):
 
 @gpu_mem_report
 def execute_lora(
-        idx,
-        model: AutoModelForCausalLM,
-        tok: AutoTokenizer,
-        requests: List[Dict],
-        hparams: LoRAHyperParams,
+        idx = None,
+        model: AutoModelForCausalLM=None,
+        tok: AutoTokenizer=None,
+        requests: List[Dict]=None,
+        hparams: LoRAHyperParams=None,
         keep_original_weight=False,
         **kwargs: Any,
 ) -> Dict[str, Tuple[torch.Tensor]]:
@@ -117,15 +115,24 @@ def execute_lora(
                 lora_alpha=hparams.lora_alpha, lora_dropout=hparams.lora_dropout,
                 layers_to_transform=hparams.layers if len(hparams.layers) > 0 else None,
                 target_modules=hparams.target_modules,
+                use_rslora=hparams.use_rslora,
+                use_dora=hparams.use_dora,
+                bias=hparams.bias,
+                target_r = hparams.target_r,
+                init_r = hparams.init_r,
+                deltaT = hparams.deltaT,
+                beta1 = hparams.beta1,
+                beta2 = hparams.beta2,
+                orth_reg_weight = hparams.orth_reg_weight,
                 # **kwargs, # AdaLoRA的超参数
             )
         peft_model = get_peft_model(model, peft_config)
-
+    assert isinstance(peft_model, PeftModel), f"peft_model{type(peft_model)} is not of type PeftModel"
     peft_model.is_parallelizable = True
     peft_model.model_parallel = True
-    # 第一次能使用, 第二次就不能用了
+    # 第一次能使用, 第二次就不能用了 应该是第二次调用时,得到的就不是PeftModel了
     # AttributeError: 'QWenLMHeadModel' object has no attribute 'print_trainable_parameters'
-    # peft_model.print_trainable_parameters()
+    peft_model.print_trainable_parameters()
     requests = deepcopy(requests)
     # for request in requests:
     #     print(
@@ -148,11 +155,9 @@ def execute_lora(
     # if torch.__version__ >= "2" and sys.platform != "win32":
     #     model = torch.compile(model)
     loss_meter = AverageMeter()
+    loss_meter.reset()
     for it in range(hparams.num_steps):
-        print(20 * "=")
-        print(f"Epoch: {it}")
-        print(20 * "=")
-        loss_meter.reset()
+        print(f"Epoch: {it}", end=' ')
 
         for txt, tgt in zip(
                 chunks(texts, hparams.batch_size), chunks(targets, hparams.batch_size)
@@ -214,18 +219,31 @@ def execute_lora(
                 # unmasked_log_probs = pred.log_softmax(-1).gather(-1, targ.unsqueeze(-1)).squeeze(-1)
                 # log_prob = (unmasked_log_probs * mask.float()).sum() / n_tokens
                 # loss = -log_prob
-        
-        if (it+1)%20 == 0 or loss_meter.avg < 1e-3:
-            ckp_path = '/share/ccks2024_output/checkpoints/'
-            ckp_path += f'{idx}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}_{hparams.batch_size}_{"_".join(hparams.target_modules)}'
-            if not os.path.exists(ckp_path):
-                os.makedirs(ckp_path)
-            peft_model.save_pretrained(ckp_path)                
-        
-        print(f"Epoch: {it} Total loss {loss_meter.avg}")
-        if loss_meter.avg < 1e-3:
+        if hparams.batch_size > 1:
+            if (it+1)%20 == 0 or loss_meter.val < 1e-3:
+                ckp_path = f'/share/ccks2024_output/checkpoints_{hparams.batch_size}_{hparams.num_steps}/'
+                ckp_path += f'{idx}_{idx+hparams.batch_size}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}'
+                ckp_path += f'_{hparams.layers[0]}_{hparams.layers[-1]}'
+                ckp_path += f'_{"_".join(hparams.target_modules)}'
+                ckp_path += f'_r_{hparams.rank}_a_{hparams.lora_alpha}_p_{hparams.lora_dropout}'
+                ckp_path += f'_rs_{hparams.use_rslora}_bias_{hparams.bias}'
+                ckp_path += f'_tr_{hparams.target_r}_ir_{hparams.init_r}'
+                # ckp_path += f'_dt_{hparams.deltaT}'
+                # ckp_path += f'_b1_{hparams.beta1}_b2_{hparams.beta2}'
+                # ckp_path += f'_or_{hparams.orth_reg_weight}'
+                if not os.path.exists(ckp_path):
+                    os.makedirs(ckp_path)
+                peft_model.save_pretrained(ckp_path)                
+        if loss_meter.val < 1e-3:
+            print(f"Epoch: {it} Batch loss {loss_meter.val}")
             break
-    # return peft_model
+
+        if (it+1)%10 == 0:
+            print(f"Epoch: {it} Total loss {loss_meter.avg}")
+            loss_meter.reset()
+            
+    
+    return peft_model
 
 
 class AverageMeter:
