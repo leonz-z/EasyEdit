@@ -15,5 +15,5 @@ knb_alpha: 32 # 需要统计一下p 99-100每层knb的数量.结合use_rsknb,实
 knb_dropout: 0 # 第一步为了Acc,暂时设置为0,然后逐步提交,为了鲁棒性
 use_rsknb: true # knb_alpha/sqrt(knb_len)
 target_modules: ['mlp.c_proj']
-bias: lora_only # TODO:knb是否现实了,存疑?已经实现
+bias: knb_only # TODO:knb是否现实了,存疑?已经实现
 p: null # 通过命令行设置
