@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+import logging
 import re
 import warnings
 from contextlib import contextmanager
@@ -31,7 +32,7 @@ from peft.tuners.tuners_utils import (
     BaseTunerLayer,
     check_target_module_exists,
 )
-
+logger = logging.getLogger(__name__)
 from ..tuners_utils import onload_layer, replicate_layers
 
 from peft.utils import ModulesToSaveWrapper, _get_submodules
@@ -245,7 +246,7 @@ class KnbModel(BaseTuner):
                 module.to(weight.device)
 
     def _mark_only_adapters_as_trainable(self, model: nn.Module) -> None:
-        print('INFO: _mark_only_adapters_as_trainable')
+        logger.info("_mark_only_adapters_as_trainable")
         for n, p in model.named_parameters():
             if self.prefix not in n:
                 p.requires_grad = False
