@@ -164,19 +164,19 @@ if __name__ == "__main__":
     if args.lora_type is not None:
         hparams.lora_type = args.lora_type
     # pre_edit
-    args.pre_file = f"./pre_edit/{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
-    print(args.pre_file)
-    if args.pre_file is not None and os.path.exists(args.pre_file):
-        pre_edit = json.load(open(args.pre_file,'r', encoding='utf-8'))
-        # pre_edit = pre_edit[477:480] # debug
-        # pre_edit = pre_edit[424:424+1] # debug
-        # pre_edit = pre_edit[:424] # IKE debug
-        if args.start_idx_end_idx is not None:
-            start_idx, end_idx = args.start_idx_end_idx.split(',')
-            pre_edit = pre_edit[int(start_idx):int(end_idx)]
-        assert len(pre_edit) == len(prompts)
-    else:
-        pre_edit = None
+    # args.pre_file = f"./pre_edit/{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
+    # print(args.pre_file)
+    # if args.pre_file is not None and os.path.exists(args.pre_file):
+    #     pre_edit = json.load(open(args.pre_file,'r', encoding='utf-8'))
+    #     # pre_edit = pre_edit[477:480] # debug
+    #     # pre_edit = pre_edit[424:424+1] # debug
+    #     # pre_edit = pre_edit[:424] # IKE debug
+    #     if args.start_idx_end_idx is not None:
+    #         start_idx, end_idx = args.start_idx_end_idx.split(',')
+    #         pre_edit = pre_edit[int(start_idx):int(end_idx)]
+    #     assert len(pre_edit) == len(prompts)
+    # else:
+    #     pre_edit = None
     if args.editing_method == 'IKE':
         train_ds = CKnowEditDataset(args.train_data_path)
         sentence_model = SentenceTransformer(hparams.sentence_model_name).to(f'cuda:{hparams.device}')
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     if not os.path.exists(args.metrics_save_dir):
         os.makedirs(args.metrics_save_dir)
     
-    save_name = f'{args.data_dir.split("/")[-1]}_{args.editing_method}_{args.data_type}_{hparams.model_name.split("/")[-1]}'
+    save_name = f'{args.data_type}_{args.editing_method}_{hparams.model_name.split("/")[-1]}'
     if args.layers is not None:
         save_name = f'{save_name}_{args.layers}'
     elif hasattr(hparams, 'layers') and len(hparams.layers) > 0:
@@ -206,13 +206,14 @@ if __name__ == "__main__":
     if args.editing_method == 'LoRA':
         save_name = f'{save_name}_r{hparams.rank}_p{hparams.lora_dropout}'
         save_name = f'{save_name}_rs{hparams.use_rslora}_a{hparams.lora_alpha}'
-        save_name = f'{save_name}_b{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
+        save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
         hparams.p = args.p
-        save_name = f'{save_name}_p_{hparams.p}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
-        save_name = f'{save_name}_pd{hparams.knb_dropout}_b{hparams.bias}'
+        save_name = f'{save_name}_p{hparams.p}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
+        save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
-            knb_dict = json.load(f)
+            p_data_weight_layer_knb_dict = json.load(f)
+        knb_dict_list = p_data_weight_layer_knb_dict[args.p]
     print(f"Hparams:\n{save_name}")
     # 编辑模型
     editor = BaseEditor.from_hparams(hparams)
@@ -227,12 +228,12 @@ if __name__ == "__main__":
         train_ds=train_ds,
         keep_original_weight=True,
         pre_file=args.pre_file,
-        pre_edit = pre_edit,
+        # pre_edit = pre_edit,
         test_generation = True,
         sequential_edit = False,
         is_post_metrics = args.is_post_metrics,
         file_obj = open(os.path.join(args.metrics_save_dir, f'{save_name}_log.json'), encoding='utf-8', mode='w'),
-        knb_dict = knb_dict,
+        knb_dict_list = knb_dict_list,
     )
     
     json.dump(metrics,
