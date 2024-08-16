@@ -552,11 +552,7 @@ class BaseEditor:
     ):
         eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
         test_generation = kwargs.pop('test_generation', False)
-
-        assert len(prompts) == len(target_new)
-
-        # if is_post_metrics and hasattr(self.hparams, 'batch_size'):
-        #     assert self.hparams.batch_size == 1, 'Single Editing: batch_size should be set to 1'    
+        assert len(prompts) == len(target_new) 
         
         if "requests" in kwargs.keys():
             requests = kwargs["requests"]
@@ -617,7 +613,7 @@ class BaseEditor:
                 json.dump(all_results, open(kwargs['pre_file'], 'w'), indent=4)
 
         @gpu_mem_report
-        def edit_func(request, idx=None):
+        def edit_func(request, idx=None, **kwargs):
             if not isinstance(request, list):
                 request = [request]
             if self.alg_name == 'IKE':
@@ -642,6 +638,7 @@ class BaseEditor:
                     keep_original_weight=False,
                     train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
                     idx=idx,
+                    **kwargs
                 )
                
                 icl_examples = None
@@ -719,12 +716,12 @@ class BaseEditor:
             for i, request in enumerate(requests):
                 post_edit_results(all_results, request, edited_model, i, eval_metric, test_generation, icl_examples, **kwargs)
         else:
-            # batch edit
+            # DONE:batch edit
             if hasattr(self.hparams, 'batch_size') and self.hparams.batch_size > 1:
                 for idx in tqdm(range(0, len(requests), self.hparams.batch_size), total=int(len(requests)/self.hparams.batch_size)):
                     end_idx = idx+self.hparams.batch_size if idx+self.hparams.batch_size < len(requests) else len(requests)
                     request_batch = requests[idx:end_idx]
-                    edited_model, weights_copy, icl_examples = edit_func(request_batch, idx)
+                    edited_model, weights_copy, icl_examples = edit_func(request_batch, idx, **kwargs)
                     if is_post_metrics:
                         post_edit_results(all_results, request_batch, edited_model, idx, eval_metric, test_generation, icl_examples, **kwargs)
                     if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
