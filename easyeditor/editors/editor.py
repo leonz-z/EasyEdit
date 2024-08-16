@@ -552,6 +552,7 @@ class BaseEditor:
     ):
         eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
         test_generation = kwargs.pop('test_generation', False)
+        knb_dict_list = kwargs.pop('knb_dict_list', None)
         assert len(prompts) == len(target_new) 
         
         if "requests" in kwargs.keys():
@@ -590,30 +591,30 @@ class BaseEditor:
             return response
 
         all_results = []
-        if 'pre_edit' in kwargs and kwargs['pre_edit'] is not None:
-            results = kwargs['pre_edit']
-            all_results = results
-        else:
-            for i, request in enumerate(tqdm(requests)):
-                results = {}
-                results['pre'] = {}
-                results['pre']['rewrite_ans'] = text_generate(self.model, self.model_name, self.hparams, self.tok, request['prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
-                results['pre']['rephrase_ans'] = text_generate(self.model, self.model_name, self.hparams, self.tok, request['rephrase_prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
-                por_results = []
-                for pr in request['portability']['por_hop']['prompt']:
-                    por_results.append(text_generate(self.model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
-                if 'locality' in request.keys() and 'loc_hop' in request['locality'].keys():
-                    loc_results = []
-                    for pr in request['locality']['loc_hop']['prompt']:
-                        loc_results.append(text_generate(self.model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
-                    results['pre']['locality_ans'] = loc_results
-                results['pre']['portability_ans'] = por_results
-                all_results.append(results)
-            if 'pre_file' in kwargs and kwargs['pre_file'] is not None:
-                json.dump(all_results, open(kwargs['pre_file'], 'w'), indent=4)
+        # if 'pre_edit' in kwargs and kwargs['pre_edit'] is not None:
+        #     results = kwargs['pre_edit']
+        #     all_results = results
+        # else:
+        #     for i, request in enumerate(tqdm(requests)):
+        #         results = {}
+        #         results['pre'] = {}
+        #         results['pre']['rewrite_ans'] = text_generate(self.model, self.model_name, self.hparams, self.tok, request['prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
+        #         results['pre']['rephrase_ans'] = text_generate(self.model, self.model_name, self.hparams, self.tok, request['rephrase_prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
+        #         por_results = []
+        #         for pr in request['portability']['por_hop']['prompt']:
+        #             por_results.append(text_generate(self.model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
+        #         if 'locality' in request.keys() and 'loc_hop' in request['locality'].keys():
+        #             loc_results = []
+        #             for pr in request['locality']['loc_hop']['prompt']:
+        #                 loc_results.append(text_generate(self.model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
+        #             results['pre']['locality_ans'] = loc_results
+        #         results['pre']['portability_ans'] = por_results
+        #         all_results.append(results)
+        #     if 'pre_file' in kwargs and kwargs['pre_file'] is not None:
+        #         json.dump(all_results, open(kwargs['pre_file'], 'w'), indent=4)
 
         @gpu_mem_report
-        def edit_func(request, idx=None, **kwargs):
+        def edit_func(request, idx=None, knb_dict=None, **kwargs):
             if not isinstance(request, list):
                 request = [request]
             if self.alg_name == 'IKE':
@@ -629,15 +630,14 @@ class BaseEditor:
                 )
             else:
                 edited_model, weights_copy = self.apply_algo(
+                    idx=idx,
                     model=self.model,
                     tok=self.tok,
                     requests=request,
                     hparams=self.hparams,
                     copy=False,
                     return_orig_weights=True,
-                    keep_original_weight=False,
-                    train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
-                    idx=idx,
+                    knb_dict=knb_dict,
                     **kwargs
                 )
                
@@ -700,8 +700,13 @@ class BaseEditor:
                             results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=request['prompt'] if isinstance(request['prompt'],list) else [request['prompt'],], max_out_len=100, vanilla_generation=True)
                         else:
                             results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=request['prompt'] if isinstance(request['prompt'],list) else [request['prompt'],], max_out_len=100, vanilla_generation=False)
-                    all_results[idx].update({
-                        'case_id': idx,
+                    # all_results[idx].update({
+                    #     'case_id': idx,
+                    #     "requested_rewrite": request,
+                    #     "post": results_post
+                    # })
+                    all_results.append({
+                        "case_id": idx,
                         "requested_rewrite": request,
                         "post": results_post
                     })
@@ -740,10 +745,13 @@ class BaseEditor:
                                 nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
 
                     # batch edit后暂不评测
-            else: # 无batch_size参数或者<=1
-                for i, request in enumerate(tqdm(requests, total=len(requests))):
-                    edited_model, weights_copy, icl_examples = edit_func(request)
-                    post_edit_results(all_results, request, edited_model, i, eval_metric, test_generation, icl_examples, **kwargs)
+            else: # 无batch_size参数或者=1
+                for idx, request in enumerate(tqdm(requests, total=len(requests))):
+                    knb_dict = None
+                    if knb_dict_list is not None:
+                        knb_dict = knb_dict_list[idx]
+                    edited_model, weights_copy, icl_examples = edit_func(request, idx, knb_dict=knb_dict, **kwargs)
+                    post_edit_results(all_results, request, edited_model, idx, eval_metric, test_generation, icl_examples, **kwargs)
                     if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
                         with torch.no_grad():
                             weights_copy()
