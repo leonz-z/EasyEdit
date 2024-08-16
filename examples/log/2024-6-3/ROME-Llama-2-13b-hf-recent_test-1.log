@@ -1,40 +1,0 @@
-2024-06-03 21:58:35,353 - easyeditor.editors.editor - INFO - Instantiating model
-06/03/2024 21:58:35 - INFO - easyeditor.editors.editor -   Instantiating model
-/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data
-['/home/bingxing2/home/scx7avs/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/share/nltk_data', '/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/nltk_data', '/usr/share/nltk_data', '/usr/local/share/nltk_data', '/usr/lib/nltk_data', '/usr/local/lib/nltk_data', '/home/bingxing2/home/scx7avs/lyc/EasyEdit/nltk_data']
-./Llama-2-13b-hf_recent_pre_edit.json
-Using Huggingface cache: /home/bingxing2/public/models/llama2/Llama-2-13b-hf
-Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:04<00:08,  4.49s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:08<00:04,  4.44s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:11<00:00,  3.67s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:11<00:00,  3.88s/it]
-/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:492: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
-  warnings.warn(
-/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`. This was detected when initializing the generation config instance, which means the corresponding file may hold incorrect parameterization and should be fixed.
-  warnings.warn(
-/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:492: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`.
-  warnings.warn(
-/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/generation/configuration_utils.py:497: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.6` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`.
-  warnings.warn(
-2024-06-03 21:58:48,647 - easyeditor.editors.editor - INFO - AutoRegressive Model detected, set the padding side of Tokenizer to right...
-06/03/2024 21:58:48 - INFO - easyeditor.editors.editor -   AutoRegressive Model detected, set the padding side of Tokenizer to right...
-Traceback (most recent call last):
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/examples/run_knowedit_llama2.py", line 207, in <module>
-    editor = BaseEditor.from_hparams(hparams)
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/editors/editor.py", line 53, in from_hparams
-    return cls(hparams)
-  File "/home/bingxing2/home/scx7avs/lyc/EasyEdit/easyeditor/editors/editor.py", line 126, in __init__
-    self.model.to(f'cuda:{hparams.device}')
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/transformers/modeling_utils.py", line 2692, in to
-    return super().to(*args, **kwargs)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1145, in to
-    return self._apply(convert)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/torch/nn/modules/module.py", line 797, in _apply
-    module._apply(fn)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/torch/nn/modules/module.py", line 797, in _apply
-    module._apply(fn)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/torch/nn/modules/module.py", line 797, in _apply
-    module._apply(fn)
-  [Previous line repeated 2 more times]
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/torch/nn/modules/module.py", line 820, in _apply
-    param_applied = fn(param)
-  File "/home/bingxing2/home/scx7avs/anaconda3/envs/ke/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1143, in convert
-    return t.to(device, dtype if t.is_floating_point() or t.is_complex() else None, non_blocking)
-torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 270.00 MiB (GPU 0; 39.39 GiB total capacity; 38.88 GiB already allocated; 97.94 MiB free; 38.88 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
