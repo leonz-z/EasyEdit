@@ -3,26 +3,93 @@ mkdir -p logs/$DATE
 source activate ke2torch23cu121
 export HUGGINGFACE_CACHE=/share/huggingface/
 export PYTHONUNBUFFERED=1
-export CUDA_VISIBLE_DEVICES=3
+# export CUDA_VISIBLE_DEVICES=1
+
 
 # LoRA
 method=LoRA
-batch_size=25
-num_steps=60
-cnt=1
-python examples/run_CKnowEdit_qwen-1.8B.py \
-    --editing_method $method \
+batch_size=35
+num_steps=100
+target_modules=all
+layers=0,24
+lora_type=adalora
+cnt=use_rslora:true,bias:lora_only,r8,a32,tr8,ir16
+
+
+data_batch=35
+skip=0
+for i in $(seq 0 2); do
+    idx1=$((i * data_batch + skip))
+    idx2=$((idx1 + data_batch))
+    start_idx_end_idx=$idx1,$idx2
+    echo $i,$start_idx_end_idx,$batch_size,$num_steps,$target_modules,$layers,$lora_type,$cnt
+    CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \
+        --batch_size $batch_size \
+        --num_steps $num_steps \
+        --start_idx_end_idx $start_idx_end_idx \
+        --target_modules $target_modules \
+        --layers $layers \
+        --editing_method $method \
+        --lora_type $lora_type \
+        --is_post_metrics \
+        --metrics_save_dir ./ccks2024_output/task1_133 \
+        > logs/$DATE/$method-$lora_type-$start_idx_end_idx-$target_modules-$layers-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+done
+
+i=3
+start_idx_end_idx=105,133
+echo $i,$start_idx_end_idx,$batch_size,$num_steps,$target_modules,$layers,$lora_type,$cnt
+CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \
     --batch_size $batch_size \
     --num_steps $num_steps \
-    > logs/$DATE/$method-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+    --start_idx_end_idx $start_idx_end_idx \
+    --target_modules $target_modules \
+    --layers $layers \
+    --editing_method $method \
+    --lora_type $lora_type \
+    --is_post_metrics \
+    --metrics_save_dir ./ccks2024_output/task1_133 \
+    > logs/$DATE/$method-$lora_type-$start_idx_end_idx-$target_modules-$layers-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
 
-# MEMIT
+# method=IKE
+# cnt=1
+# python examples/run_CKnowEdit_qwen-1.8B.py \
+#     --editing_method $method \
+#     > logs/$DATE/$method-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+
+# # MEMIT
 # method=MEMIT
-# layers=18,24
+# layers=0,6
+# # layers=6,12
+# # layers=12,18
+# # start_idx_end_idx=400,500
+# # start_idx_end_idx=500,600
+# start_idx_end_idx=600,700
+# # start_idx_end_idx=0,400
+# cnt=1
 # python examples/run_CKnowEdit_qwen-1.8B.py \
 #     --editing_method $method \
 #     --layers $layers \
-#     > logs/$DATE/$method-$layers-Qwen-1_8B-Chat-1.log 2>&1 &
+#     --start_idx_end_idx $start_idx_end_idx \
+#     > logs/$DATE/$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+#     # > logs/$DATE/$method-$layers-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+
+# # PMET
+# method=PMET
+# # layers=0,6
+# # layers=6,12
+# layers=12,18
+# # start_idx_end_idx=400,500
+# # start_idx_end_idx=500,600
+# # start_idx_end_idx=600,700
+# # start_idx_end_idx=0,400
+# cnt=1
+# python examples/run_CKnowEdit_qwen-1.8B.py \
+#     --editing_method $method \
+#     --layers $layers \
+#     > logs/$DATE/$method-$layers-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+#     # --start_idx_end_idx $start_idx_end_idx \
+#     # > logs/$DATE/$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
 
 # target_r (`int`): The target average rank of incremental matrix.
 # init_r (`int`): The initial rank for each incremental matrix.
