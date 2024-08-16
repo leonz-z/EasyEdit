@@ -245,6 +245,7 @@ class KnbModel(BaseTuner):
                 module.to(weight.device)
 
     def _mark_only_adapters_as_trainable(self, model: nn.Module) -> None:
+        print('INFO: _mark_only_adapters_as_trainable')
         for n, p in model.named_parameters():
             if self.prefix not in n:
                 p.requires_grad = False
