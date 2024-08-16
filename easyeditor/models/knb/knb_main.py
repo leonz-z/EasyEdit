@@ -127,6 +127,7 @@ def execute_knb(
             target_modules=hparams.target_modules, # target_knb
             knb_dict=knb_dict,
             use_rsknb=hparams.use_rsknb,
+            bias=hparams.bias,
         )
         peft_model = get_peft_model(model, peft_config)
 
