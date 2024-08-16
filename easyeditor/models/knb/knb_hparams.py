@@ -34,6 +34,7 @@ class KNBHyperParams(HyperParams):
     use_rsknb: bool = False
     bias: str = 'none'
     p: str = None
+    t_loss: float = 1e-3
 
     @classmethod
     def from_hparams(cls, hparams_name_or_path: str):
