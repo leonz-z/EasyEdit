@@ -160,7 +160,7 @@ class BaseTuner(nn.Module, ABC):
             else:
                 # user is adding a dict of PeftConfigs
                 self.peft_config.update(peft_config)
-
+            logger.info(f'peft_config:\n{self.peft_config}')
         self.active_adapter = adapter_name
         self.inject_adapter(self.model, adapter_name)
 
