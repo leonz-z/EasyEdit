@@ -210,7 +210,7 @@ if __name__ == "__main__":
     elif args.editing_method == 'KNB':
         hparams.p = args.p
         save_name = f'{save_name}_p{hparams.p}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
-        save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}'
+        save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
             p_data_weight_layer_knb_dict = json.load(f)
         knb_dict_list = p_data_weight_layer_knb_dict[args.p]
