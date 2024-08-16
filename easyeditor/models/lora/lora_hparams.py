@@ -31,6 +31,17 @@ class LoRAHyperParams(HyperParams):
 
     bf16: bool = False
     fp16: bool = False
+    # lora
+    use_dora: bool = False
+    use_rslora: bool = False
+    bias: str = 'none'
+    # adalora
+    target_r: int = 8
+    init_r: int = 16
+    deltaT: int = 1
+    beta1: float = 0.85
+    beta2: float = 0.85
+    orth_reg_weight: float = 0.5
 
     @classmethod
     def from_hparams(cls, hparams_name_or_path: str):
