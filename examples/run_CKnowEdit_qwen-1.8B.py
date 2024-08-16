@@ -9,6 +9,7 @@ from easyeditor import (
     IKEHyperParams, 
     KNHyperParams, 
     MEMITHyperParams, 
+    PMETHyperParams, 
     ROMEHyperParams, 
     LoRAHyperParams,
     GraceHyperParams,
@@ -28,13 +29,17 @@ if __name__ == "__main__":
     parser.add_argument('--hparams_dir', type=str, default='./hparams/LoRA/Qwen-1_8B-Chat.yaml')
     parser.add_argument('--data_dir', type=str, default='./dataset/ccks2024_know_edit/ccks-CKnowEdit.json')
     parser.add_argument('--ds_size', default=None, type=int)
-    parser.add_argument('--metrics_save_dir', default='./ccsk2024_output', type=str)
-    parser.add_argument('--train_data_path', type=str, default=None)
+    parser.add_argument('--metrics_save_dir', default='./ccks2024_output/batch_data_10', type=str)
+    parser.add_argument('--train_data_path', type=str, default='./dataset/ccks2024_know_edit/ccks-CKnowEdit.json')
     parser.add_argument('--pre_file', default='./pre_edit/Qwen-1_8B-Chat_CKnowEdit_pre_edit.json', type=str)
     parser.add_argument('--data_type', type=str, default='CKnowEdit')
     parser.add_argument('--layers', default=None, type=str)
     parser.add_argument('--batch_size', default=None, type=int)
     parser.add_argument('--num_steps', default=None, type=int)
+    parser.add_argument('--is_post_metrics', default=False, action='store_true')
+    parser.add_argument('--target_modules', default=None, type=str) # 目标模块，all,mlp,attn
+    parser.add_argument('--start_idx_end_idx', default=None, type=str)
+    parser.add_argument('--lora_type', default=None, type=str, help='lora type: lora,adalora')
     args = parser.parse_args()
 
     if args.editing_method == 'FT':
@@ -45,6 +50,8 @@ if __name__ == "__main__":
         editing_hparams = KNHyperParams
     elif args.editing_method == 'MEMIT':
         editing_hparams = MEMITHyperParams
+    elif args.editing_method == 'PMET':
+        editing_hparams = PMETHyperParams
     elif args.editing_method == 'ROME':
         editing_hparams = ROMEHyperParams
     elif args.editing_method == 'LoRA':
@@ -57,6 +64,11 @@ if __name__ == "__main__":
     # 加载处理数据
     datas = CKnowEditDataset(args.data_dir,size=args.ds_size)
     # datas = datas[477:480] # debug
+    # datas = datas[424:424+1] # debug
+    # datas = datas[:424] # IKE debug
+    if args.start_idx_end_idx is not None:
+        start_idx, end_idx = args.start_idx_end_idx.split(',')
+        datas = datas[int(start_idx):int(end_idx)]
     prompts=[data['prompt'] for data in datas]
     target_new = [data['target_new'] for data in datas]
     ground_truth = [data['target_old'] for data in datas]
@@ -119,20 +131,34 @@ if __name__ == "__main__":
     # 处理参数
     prefix_path = '/home/lyc/TNTprojectz/KE/EasyEdit'
     hparams = editing_hparams.from_hparams(f'{prefix_path}/hparams/{args.editing_method}/Qwen-1_8B-Chat.yaml')
+    if args.target_modules is not None:
+        if args.target_modules == 'all':
+            pass
+        elif args.target_modules in ['mlp', 'attn']:
+            target_modules = [m for m in hparams.target_modules if args.target_modules in m]
+            hparams.target_modules = target_modules
+        print(f"target_modules: {hparams.target_modules}")
     if args.layers is not None:
         start_layer, end_layer = args.layers.split(',')
-        args.layers = [i for i in range(int(start_layer), int(end_layer))]
-        hparams.layers = args.layers
+        layers = [i for i in range(int(start_layer), int(end_layer))]
+        hparams.layers = layers
         print(f"layers: {hparams.layers}")
     if args.num_steps is not None:
         hparams.num_steps = args.num_steps
     if args.batch_size is not None:
         hparams.batch_size = args.batch_size
+    if args.lora_type is not None:
+        hparams.lora_type = args.lora_type
     args.pre_file = f"{prefix_path}/pre_edit/{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
     print(args.pre_file)
     if args.pre_file is not None and os.path.exists(args.pre_file):
         pre_edit = json.load(open(args.pre_file,'r', encoding='utf-8'))
         # pre_edit = pre_edit[477:480] # debug
+        # pre_edit = pre_edit[424:424+1] # debug
+        # pre_edit = pre_edit[:424] # IKE debug
+        if args.start_idx_end_idx is not None:
+            start_idx, end_idx = args.start_idx_end_idx.split(',')
+            pre_edit = pre_edit[int(start_idx):int(end_idx)]
         assert len(pre_edit) == len(prompts)
     else:
         pre_edit = None
@@ -142,6 +168,25 @@ if __name__ == "__main__":
         encode_ike_facts(sentence_model, train_ds, hparams)
     else:
         train_ds = None
+    # 保存结果
+    if not os.path.exists(args.metrics_save_dir):
+        os.makedirs(args.metrics_save_dir)
+    
+    save_name = f'{args.editing_method}_{args.data_type}_{hparams.model_name.split("/")[-1]}'
+    if args.layers is not None:
+        save_name = f'{save_name}_{args.layers}'
+    if args.num_steps is not None:
+        save_name = f'{save_name}_{args.num_steps}'
+    if args.batch_size is not None:
+        save_name = f'{save_name}_{args.batch_size}'
+    if args.target_modules is not None:
+        save_name = f'{save_name}_{args.target_modules}'
+    if args.start_idx_end_idx is not None:
+        save_name = f'{args.start_idx_end_idx}_{save_name}'
+    # hparams参数肯能不存在
+    save_name = f'{save_name}_r{hparams.rank}_p{hparams.lora_dropout}'
+    save_name = f'{save_name}_rs{hparams.use_rslora}_a{hparams.lora_alpha}'
+    save_name = f'{save_name}_b{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     # 编辑模型
     editor = BaseEditor.from_hparams(hparams)
     metrics, edited_model, _ = editor.generate_edit(
@@ -157,15 +202,12 @@ if __name__ == "__main__":
         pre_file=args.pre_file,
         pre_edit = pre_edit,
         test_generation=True,
-        sequential_edit = False
+        sequential_edit = False,
+        is_post_metrics=args.is_post_metrics,
+        file_obj=open(os.path.join(args.metrics_save_dir, f'{save_name}_log.json'), encoding='utf-8', mode='w'),
     )
-    # 保存结果
-    if not os.path.exists(args.metrics_save_dir):
-        os.makedirs(args.metrics_save_dir)
-    json.dump(metrics, 
-              open(os.path.join(args.metrics_save_dir, 
-                                f'{args.editing_method}_{args.data_type}_{hparams.model_name.split("/")[-1]}_results.json'), 
-                                encoding='utf-8', 
-                                mode='w'), 
+    
+    json.dump(metrics,
+            open(os.path.join(args.metrics_save_dir, f'{save_name}.json'), encoding='utf-8', mode='w'), 
             indent=4,
             ensure_ascii=False)
