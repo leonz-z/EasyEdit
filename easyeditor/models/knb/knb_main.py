@@ -157,6 +157,7 @@ def execute_knb(
     #     model = torch.compile(model)
     loss_meter = AverageMeter()
     loss_meter.reset()
+    t_loss = hparams.t_loss
     for it in range(hparams.num_steps):
         print(f"Epoch: {it}", end=' ')
 
@@ -166,7 +167,7 @@ def execute_knb(
             knb_forward(peft_model, txt, tgt, device, tok, loss_meter, opt)
             
         if hparams.batch_size > 1:
-            if (it+1)%20 == 0 or loss_meter.val < 1e-3:
+            if (it+1)%20 == 0 or loss_meter.val < t_loss:
                 ckp_path = f'/share/ccks2024_output/knb/checkpoints_{hparams.batch_size}_{hparams.num_steps}/'
                 ckp_path += f'{idx}_{idx+hparams.batch_size}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}'
                 ckp_path += f'_{hparams.layers[0]}_{hparams.layers[-1]}'
@@ -177,8 +178,8 @@ def execute_knb(
                 if not os.path.exists(ckp_path):
                     os.makedirs(ckp_path)
                 peft_model.save_pretrained(ckp_path)                
-        if loss_meter.val < 1e-3:
-            print(f"Epoch: {it} Batch loss {loss_meter.val}")
+        if loss_meter.val < t_loss:
+            print(f"Epoch: {it} Batch loss {loss_meter.val} < {t_loss}")
             break
 
         if (it+1)%10 == 0:
