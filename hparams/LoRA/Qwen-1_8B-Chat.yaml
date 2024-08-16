@@ -12,7 +12,16 @@ weight_decay: 0
 kl_factor: 0
 rank: 8
 lora_alpha: 32
-lora_dropout: 0.1
+lora_dropout: 0
 norm_constraint: false
 target_modules: ['attn.c_attn', 'attn.c_proj', 'mlp.w1', 'mlp.w2', 'mlp.c_proj']
 model_parallel: true
+target_r: 8
+init_r: 16
+deltaT: 1
+beta1: 0.85
+beta2: 0.85
+orth_reg_weight: 0.5
+use_dora: false
+use_rslora: true
+bias: 'lora_only'
