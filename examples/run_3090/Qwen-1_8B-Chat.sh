@@ -5,51 +5,75 @@ export HUGGINGFACE_CACHE=/share/huggingface/
 export PYTHONUNBUFFERED=1
 # export CUDA_VISIBLE_DEVICES=1
 
+# KNB
+method=KNB
+batch_size=1
+num_steps=80
+start_idx_end_idx=0,80
+data_type=type2_80
+p=99.5
+cnt=1
 
-# LoRA
-method=LoRA
-batch_size=35
-num_steps=100
-target_modules=all
-layers=0,24
-lora_type=adalora
-cnt=use_rslora:true,bias:lora_only,r8,a32,tr8,ir16
-
-
-data_batch=35
-skip=0
-for i in $(seq 0 2); do
-    idx1=$((i * data_batch + skip))
-    idx2=$((idx1 + data_batch))
-    start_idx_end_idx=$idx1,$idx2
-    echo $i,$start_idx_end_idx,$batch_size,$num_steps,$target_modules,$layers,$lora_type,$cnt
-    CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \
-        --batch_size $batch_size \
-        --num_steps $num_steps \
-        --start_idx_end_idx $start_idx_end_idx \
-        --target_modules $target_modules \
-        --layers $layers \
-        --editing_method $method \
-        --lora_type $lora_type \
-        --is_post_metrics \
-        --metrics_save_dir ./ccks2024_output/task1_133 \
-        > logs/$DATE/$method-$lora_type-$start_idx_end_idx-$target_modules-$layers-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
-done
-
-i=3
-start_idx_end_idx=105,133
-echo $i,$start_idx_end_idx,$batch_size,$num_steps,$target_modules,$layers,$lora_type,$cnt
+i=2
+echo $i-$p-$start_idx_end_idx-$method-$batch_size-$num_steps-$data_type-Qwen-1_8B-Chat-$cnt
 CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \
     --batch_size $batch_size \
     --num_steps $num_steps \
-    --start_idx_end_idx $start_idx_end_idx \
-    --target_modules $target_modules \
-    --layers $layers \
     --editing_method $method \
-    --lora_type $lora_type \
-    --is_post_metrics \
-    --metrics_save_dir ./ccks2024_output/task1_133 \
-    > logs/$DATE/$method-$lora_type-$start_idx_end_idx-$target_modules-$layers-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+    --p $p \
+    --data_type CKnowEdit_$data_type \
+    --metrics_save_dir ./ccks2024_output/$data_type \
+    --data_dir ./dataset/ccks2024_know_edit/CKnowEditType/$data_type.json \
+    --start_idx_end_idx $start_idx_end_idx \
+    --knb_dict_path ../knowledge-neurons-lyc/tests/Qwen-1_8B-Chat_CKnowEdit_answer_next_token/type2_80-Qwen-1_8B-Chat-CKnowEdit-layer-0-24-mlp.w1-target_new-no-prompt-p_data_weight_layer_knb_dict.json \
+    > logs/$DATE/$i-$p-$start_idx_end_idx-$method-$batch_size-$num_steps-$data_type-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+    # --is_post_metrics \
+
+
+# # LoRA
+# method=LoRA
+# batch_size=35
+# num_steps=100
+# target_modules=all
+# layers=0,24
+# lora_type=adalora
+# cnt=use_rslora:true,bias:lora_only,r8,a32,tr8,ir16
+
+
+# data_batch=35
+# skip=0
+# for i in $(seq 0 2); do
+#     idx1=$((i * data_batch + skip))
+#     idx2=$((idx1 + data_batch))
+#     start_idx_end_idx=$idx1,$idx2
+#     echo $i,$start_idx_end_idx,$batch_size,$num_steps,$target_modules,$layers,$lora_type,$cnt
+#     CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \
+#         --batch_size $batch_size \
+#         --num_steps $num_steps \
+#         --start_idx_end_idx $start_idx_end_idx \
+#         --target_modules $target_modules \
+#         --layers $layers \
+#         --editing_method $method \
+#         --lora_type $lora_type \
+#         --is_post_metrics \
+#         --metrics_save_dir ./ccks2024_output/task1_133 \
+#         > logs/$DATE/$method-$lora_type-$start_idx_end_idx-$target_modules-$layers-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+# done
+
+# i=3
+# start_idx_end_idx=105,133
+# echo $i,$start_idx_end_idx,$batch_size,$num_steps,$target_modules,$layers,$lora_type,$cnt
+# CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \
+    # --batch_size $batch_size \
+    # --num_steps $num_steps \
+    # --start_idx_end_idx $start_idx_end_idx \
+    # --target_modules $target_modules \
+    # --layers $layers \
+    # --editing_method $method \
+    # --lora_type $lora_type \
+    # --is_post_metrics \
+    # --metrics_save_dir ./ccks2024_output/task1_133 \
+    # > logs/$DATE/$method-$lora_type-$start_idx_end_idx-$target_modules-$layers-$batch_size-$num_steps-Qwen-1_8B-Chat-$cnt.log 2>&1 &
 
 # method=IKE
 # cnt=1
