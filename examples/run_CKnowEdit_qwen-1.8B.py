@@ -209,6 +209,8 @@ if __name__ == "__main__":
         save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
         hparams.p = args.p
+        save_name = args.knb_dict_path.split('/')[-1].replace('.json', '')
+        save_name += f'_{args.num_steps}'
         save_name = f'{save_name}_p{hparams.p}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
         save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
