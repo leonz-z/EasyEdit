@@ -475,8 +475,6 @@ class BaseEditor:
                     del self.model.peft_config
                 elif self.alg_name == 'MELO':
                     self.model = edited_model
-                elif self.alg_name == 'LoRA':
-                    self.model = edited_model
                 else:
                     with torch.no_grad():
                         for k, v in weights_copy.items():
@@ -737,8 +735,6 @@ class BaseEditor:
                         del self.model.peft_config
                     elif self.alg_name == 'MELO':
                         self.model = edited_model
-                    elif self.alg_name == 'LoRA':
-                        self.model = edited_model
                     else:
                         with torch.no_grad():
                             for k, v in weights_copy.items():
@@ -759,8 +755,6 @@ class BaseEditor:
                         edited_model.unload()
                         del self.model.peft_config
                     elif self.alg_name == 'MELO':
-                        self.model = edited_model
-                    elif self.alg_name == 'LoRA':
                         self.model = edited_model
                     else:
                         with torch.no_grad():
