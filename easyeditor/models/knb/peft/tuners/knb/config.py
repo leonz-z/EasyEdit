@@ -199,13 +199,13 @@ class KnbConfig(PeftConfig):
             )
         },
     )
-    # add param knb_dict 0422@cjc
-    knb_dict: Optional[dict] = field(
+    # add param knb_dict 0816@lzc
+    knb_dict: Optional[list[dict]] = field(
         default=None,
         metadata={
             "help": (
                 "knb dict"
-                "knb_dict:key1=weight_name, value1=kn_dict"
+                "knb_dict:key1=module_name, value1=kn_dict"
                 "kn_dict:key2=layer_idx, value2=kn_idx_list")
         }
     )

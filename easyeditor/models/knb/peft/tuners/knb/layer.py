@@ -87,7 +87,6 @@ class KnbLayer(BaseTunerLayer):
         else:
             self.scaling[adapter_name] = knb_alpha / length
 
-
         if init_knb_weights:
             self.reset_knb_parameters(adapter_name, init_knb_weights)
 
@@ -169,8 +168,6 @@ class KnbLayer(BaseTunerLayer):
             # adapters. Therefore, it is better to raise an error in this case.
             msg = "Cannot pass `adapter_names` when there are merged adapters, please call `unmerge_adapter` first."
             raise ValueError(msg)
-
-        unique_adapters = set(self.active_adapters)
 
 # Below code is based on https://github.com/microsoft/LoRA/blob/main/loralib/layers.py
 # and modified to work with PyTorch FSDP
@@ -326,10 +323,10 @@ class Linear(nn.Module, KnbLayer):
                     continue
                 knb_W = self.knb_W[active_adapter]
                 dropout = self.knb_dropout[active_adapter]
-                scaling = self.scaling[active_adapter]
                 x = x.to(knb_W.weight.dtype)
                 # 维度问题
                 if self.kn_idx_list is not None:
+                    scaling = self.scaling[active_adapter]
                     delta_w = self.get_delta_weight(active_adapter) # [out_features, in_features]
                     delta_w = delta_w.to(dtype=x.dtype)
                     result += scaling * (dropout(x) @ delta_w.T) # [batch_size, seq_len, in_features]@[in_features, out_features] = [batch_size, seq_len, out_features]

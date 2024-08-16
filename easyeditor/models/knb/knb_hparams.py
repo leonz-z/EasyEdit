@@ -32,6 +32,8 @@ class KNBHyperParams(HyperParams):
     fp16: bool = False
     
     use_rsknb: bool = False
+    bias: str = 'none'
+    p: str = None
 
     @classmethod
     def from_hparams(cls, hparams_name_or_path: str):
