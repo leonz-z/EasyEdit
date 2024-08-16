@@ -22,5 +22,5 @@ checkpoint
 .DS_Store
 answer*.json
 nltk_data
-EasyEditCache
+EasyEditCache*
 pre_edit
