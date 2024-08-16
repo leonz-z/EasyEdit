@@ -1,5 +1,6 @@
 from copy import deepcopy
 import os
+import random
 from typing import Any, Dict, List, Tuple
 from .peft import get_peft_model, TaskType, KnbConfig
 import torch
@@ -143,8 +144,9 @@ def execute_knb(
     device = torch.device(f'cuda:{hparams.device}')
     print(f"Using device: {device}")
     # Define inputs
-    texts = [r["prompt"] for r in requests]
-    targets = [r["target_new"] for r in requests]
+    # texts = [r["prompt"] for r in requests]
+    # targets = [r["target_new"] for r in requests]
+    texts_targets = [[r["prompt"], r["target_new"]] for r in requests]
 
     # Configure optimizer / gradients
     opt = torch.optim.Adam(
@@ -161,23 +163,27 @@ def execute_knb(
     for it in range(hparams.num_steps):
         print(f"Epoch: {it}", end=' ')
 
-        for txt, tgt in zip( # 输入数据为batch_size条,只循环一次
-                chunks(texts, hparams.batch_size), chunks(targets, hparams.batch_size)
-        ):
+        # for txt, tgt in zip( # 输入数据为batch_size条,只循环一次
+        #         chunks(texts, hparams.batch_size), chunks(targets, hparams.batch_size)
+        # ):
+        # 把texts_targets数据打乱
+        random.shuffle(texts_targets)
+        for data in chunks(texts_targets, hparams.batch_size):
+            txt, tgt = zip(*data)
             knb_forward(peft_model, txt, tgt, device, tok, loss_meter, opt)
             
-        if hparams.batch_size > 1:
-            if (it+1)%20 == 0 or loss_meter.val < t_loss:
-                ckp_path = f'/share/ccks2024_output/knb/checkpoints_{hparams.batch_size}_{hparams.num_steps}/'
-                ckp_path += f'{idx}_{idx+hparams.batch_size}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}'
-                ckp_path += f'_{hparams.layers[0]}_{hparams.layers[-1]}'
-                ckp_path += f'_{"_".join(hparams.target_modules)}'
-                ckp_path += f'_a_{hparams.knb_alpha}_p_{hparams.knb_dropout}'
-                ckp_path += f'_rs_{hparams.use_rsknb}'
+        # if hparams.batch_size > 1:
+        #     if (it+1)%20 == 0 or loss_meter.val < t_loss:
+        #         ckp_path = f'/share/ccks2024_output/knb/checkpoints_{hparams.batch_size}_{hparams.num_steps}/'
+        #         ckp_path += f'{idx}_{idx+hparams.batch_size}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}'
+        #         ckp_path += f'_{hparams.layers[0]}_{hparams.layers[-1]}'
+        #         ckp_path += f'_{"_".join(hparams.target_modules)}'
+        #         ckp_path += f'_a_{hparams.knb_alpha}_p_{hparams.knb_dropout}'
+        #         ckp_path += f'_rs_{hparams.use_rsknb}'
 
-                if not os.path.exists(ckp_path):
-                    os.makedirs(ckp_path)
-                peft_model.save_pretrained(ckp_path)                
+        #         if not os.path.exists(ckp_path):
+        #             os.makedirs(ckp_path)
+        #         peft_model.save_pretrained(ckp_path)                
         if loss_meter.val < t_loss:
             print(f"Epoch: {it} Batch loss {loss_meter.val} < {t_loss}")
             break
