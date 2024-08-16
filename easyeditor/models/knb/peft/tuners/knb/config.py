@@ -18,8 +18,7 @@ from dataclasses import dataclass, field
 from typing import Literal, Optional, Union
 
 from peft.config import PeftConfig
-from peft.utils import PeftType
-
+from ....peft.utils import PeftType
 
 @dataclass
 class KnbConfig(PeftConfig):
