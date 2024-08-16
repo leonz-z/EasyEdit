@@ -671,15 +671,20 @@ class BaseEditor:
                                 results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=request[i]['prompt'] if isinstance(request[i]['prompt'],list) else [request[i]['prompt'],], max_out_len=100, vanilla_generation=True)
                             else:
                                 results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=request[i]['prompt'] if isinstance(request[i]['prompt'],list) else [request[i]['prompt'],], max_out_len=100, vanilla_generation=False)
-                        all_results[i+idx].update({
-                            'case_id': i+idx,
+                        # all_results[i+idx].update({
+                        #     'case_id': i+idx,
+                        #     "requested_rewrite": request[i],
+                        #     "post": results_post
+                        # })
+                        all_results.append({
+                            "case_id": i+idx,
                             "requested_rewrite": request[i],
                             "post": results_post
                         })
                         file_obj.writelines(json.dumps(all_results[i+idx], ensure_ascii=False) + '\n')
                         file_obj.flush()
                         if verbose:
-                            LOG.info(f"{i+idx} editing: {request[i]['prompt']} -> {request[i]['target_new']}")
+                            LOG.info(f"{idx} editing: {request[i]['prompt']} -> {request[i]['target_new']}")
                 else:
                     results_post = {}
                     results_post['rewrite_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request['prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
@@ -721,10 +726,13 @@ class BaseEditor:
         else:
             # DONE:batch edit
             if hasattr(self.hparams, 'batch_size') and self.hparams.batch_size > 1:
-                for idx in tqdm(range(0, len(requests), self.hparams.batch_size), total=int(len(requests)/self.hparams.batch_size)):
+                for i, idx in tqdm(enumerate(range(0, len(requests), self.hparams.batch_size)), total=int(len(requests)/self.hparams.batch_size)):
+                    knb_dict = None
+                    if knb_dict_list is not None:
+                        knb_dict = knb_dict_list[i]
                     end_idx = idx+self.hparams.batch_size if idx+self.hparams.batch_size < len(requests) else len(requests)
                     request_batch = requests[idx:end_idx]
-                    edited_model, weights_copy, icl_examples = edit_func(request_batch, idx, **kwargs)
+                    edited_model, weights_copy, icl_examples = edit_func(request_batch, idx, knb_dict=knb_dict, **kwargs)
                     if is_post_metrics:
                         post_edit_results(all_results, request_batch, edited_model, idx, eval_metric, test_generation, icl_examples, **kwargs)
                     if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
