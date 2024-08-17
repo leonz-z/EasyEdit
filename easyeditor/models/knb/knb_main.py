@@ -176,7 +176,7 @@ def execute_knb(
             if (it+1)%20 == 0 or loss_meter.val < t_loss:
                 ckp_path = f'/share/ccks2024_output/knb/checkpoints_{hparams.batch_size}_{hparams.num_steps}/'
                 ckp_path += f'{idx}_{idx+hparams.batch_size}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}'
-                ckp_path += f'_{hparams.layers[0]}_{hparams.layers[-1]}'
+                ckp_path += f'_{"_".join(hparams.layers)}'
                 ckp_path += f'_{"_".join(hparams.target_modules)}'
                 ckp_path += f'_a{hparams.knb_alpha}_pd{hparams.knb_dropout}_p{hparams.p}'
                 ckp_path += f'_rs_{hparams.use_rsknb}_b_{hparams.bias}_loss{hparams.t_loss}'
@@ -189,7 +189,7 @@ def execute_knb(
             break
 
         if (it+1)%10 == 0:
-            print(f"=Epoch: {it} Total loss {loss_meter.avg}=")
+            print(f"[Epoch: {it} Total loss {loss_meter.avg}]")
             loss_meter.reset()
             
     return peft_model
