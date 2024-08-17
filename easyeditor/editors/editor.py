@@ -566,7 +566,8 @@ class BaseEditor:
             query,
             device,
             eval_metric: str = 'token_em',
-            test_generation = False
+            test_generation = False,
+            max_new_tokens = 512,
         ):
             model.eval()
             messages = [
@@ -582,7 +583,7 @@ class BaseEditor:
             template_length = len(model_inputs[0])
             generated_ids = model.generate(
                 input_ids=model_inputs,
-                max_new_tokens=512 # 可不可以限制为正确答案的长度?
+                max_new_tokens=max_new_tokens, # 可不可以限制为正确答案的长度?
             )
             trimmed_generated_ids = generated_ids[0][template_length:]
             response = tok.decode(trimmed_generated_ids, skip_special_tokens=True)
@@ -655,22 +656,31 @@ class BaseEditor:
                 if isinstance(request, list):
                     for i in range(len(request)):
                         results_post = {}
-                        results_post['rewrite_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
-                        results_post['rephrase_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['rephrase_prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
+                        answer_token_len = self.tok.encode(request[i]['target_new'], return_tensors="pt")['input_ids'].shape[1]
+                        results_post['rewrite_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['prompt'], self.hparams.device, \
+                                                                     eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=answer_token_len)
+                        results_post['rephrase_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['rephrase_prompt'], self.hparams.device,\
+                                                                      eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=answer_token_len)
                         por_results = []
                         for pr in request[i]['portability']['por_hop']['prompt']:
-                            por_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
+                            pr_token_len = self.tok.encode(pr, return_tensors="pt")['input_ids'].shape[1]
+                            por_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, \
+                                                             eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=pr_token_len))
                         if 'locality' in request[i].keys() and 'loc_hop' in request[i]['locality'].keys():
                             loc_results = []
                             for pr in request[i]['locality']['loc_hop']['prompt']:
-                                loc_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
+                                loc_token_len = self.tok.encode(pr, return_tensors="pt")['input_ids'].shape[1]
+                                loc_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, \
+                                                                 eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=loc_token_len))
                             results_post['locality_ans'] = loc_results
                         results_post['portability_ans'] = por_results
                         if test_generation:
                             if self.hparams.alg_name == 'GRACE':
-                                results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=request[i]['prompt'] if isinstance(request[i]['prompt'],list) else [request[i]['prompt'],], max_out_len=100, vanilla_generation=True)
+                                results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=[request[i]['prompt'],], max_out_len=100, vanilla_generation=True)
+                                results_post['fluency_new'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=[request[i]['prompt'],], max_out_len=answer_token_len, vanilla_generation=True)
                             else:
-                                results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=request[i]['prompt'] if isinstance(request[i]['prompt'],list) else [request[i]['prompt'],], max_out_len=100, vanilla_generation=False)
+                                results_post['fluency'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=[request[i]['prompt'],], max_out_len=100, vanilla_generation=False)
+                                results_post['fluency_new'] = test_generation_quality(model=edited_model,tok=self.tok,prefixes=[request[i]['prompt'],], max_out_len=answer_token_len, vanilla_generation=False)
                         # all_results[i+idx].update({
                         #     'case_id': i+idx,
                         #     "requested_rewrite": request[i],
