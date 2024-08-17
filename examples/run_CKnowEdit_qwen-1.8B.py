@@ -234,11 +234,12 @@ if __name__ == "__main__":
         test_generation = True,
         sequential_edit = False,
         is_post_metrics = args.is_post_metrics,
-        file_obj = open(os.path.join(args.metrics_save_dir, f'{save_name}_log.json'), encoding='utf-8', mode='w'),
+        file_obj = open(os.path.join(args.metrics_save_dir, f'log/{save_name}_log.json'), encoding='utf-8', mode='w'),
         knb_dict_list = knb_dict_list,
+        max_new_tokens_times=3,
     )
     
     json.dump(metrics,
-            open(os.path.join(args.metrics_save_dir, f'{save_name}.json'), encoding='utf-8', mode='w'), 
+            open(os.path.join(args.metrics_save_dir, f'result/{save_name}.json'), encoding='utf-8', mode='w'), 
             indent=4,
             ensure_ascii=False)
