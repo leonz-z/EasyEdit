@@ -569,10 +569,12 @@ class BaseEditor:
             eval_metric: str = 'token_em',
             test_generation = False,
             max_new_tokens = 512,
+            system_prompt = "你是一个乐于助人的助手。 "
         ):
             model.eval()
             messages = [
-                {"role": "system", "content": "You are a helpful assistant."},
+                # {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ]
             text = self.tok.apply_chat_template(
