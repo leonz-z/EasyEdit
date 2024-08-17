@@ -656,20 +656,20 @@ class BaseEditor:
                 if isinstance(request, list):
                     for i in range(len(request)):
                         results_post = {}
-                        answer_token_len = self.tok.encode(request[i]['target_new'], return_tensors="pt")['input_ids'].shape[1]
+                        answer_token_len = self.tok.encode(request[i]['target_new'], return_tensors="pt").shape[1]
                         results_post['rewrite_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['prompt'], self.hparams.device, \
                                                                      eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=answer_token_len)
                         results_post['rephrase_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['rephrase_prompt'], self.hparams.device,\
                                                                       eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=answer_token_len)
                         por_results = []
                         for pr in request[i]['portability']['por_hop']['prompt']:
-                            pr_token_len = self.tok.encode(pr, return_tensors="pt")['input_ids'].shape[1]
+                            pr_token_len = self.tok.encode(pr, return_tensors="pt").shape[1]
                             por_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, \
                                                              eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=pr_token_len))
                         if 'locality' in request[i].keys() and 'loc_hop' in request[i]['locality'].keys():
                             loc_results = []
                             for pr in request[i]['locality']['loc_hop']['prompt']:
-                                loc_token_len = self.tok.encode(pr, return_tensors="pt")['input_ids'].shape[1]
+                                loc_token_len = self.tok.encode(pr, return_tensors="pt").shape[1]
                                 loc_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, \
                                                                  eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=loc_token_len))
                             results_post['locality_ans'] = loc_results
