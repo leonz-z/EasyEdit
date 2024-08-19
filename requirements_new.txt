@@ -14,7 +14,6 @@ scikit-learn
 scipy
 sentence-transformers
 tokenizers
-torch
 tqdm
 transformers
 openai
@@ -23,3 +22,9 @@ timm
 iopath
 opencv-python
 fairscale
+# qwen
+torch --index-url https://download.pytorch.org/whl/cu118
+tiktoken
+transformers_stream_generator
+ninja
+flash-attn --no-build-isolation
