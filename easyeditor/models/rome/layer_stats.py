@@ -99,10 +99,18 @@ def layer_stats(
         # from datasets import Dataset
         # raw_ds = Dataset.from_file('XXX/XXX/wikipedia-train.arrow')
         # raw_ds = {'train': raw_ds}
-        raw_ds = load_dataset(
-            ds_name,
-            dict(wikitext="wikitext-103-raw-v1", wikipedia="20200501.en")[ds_name]
-        )
+        # lzc@2024-8-19
+        if ds_name == "wikipedia-cn-20230720-filtered":
+            raw_ds = load_dataset('/share/dataset/Wikipedia/')
+            print(raw_ds)
+            print(raw_ds['train'])
+            # raw_ds = raw_ds.map(lambda example: {'text': example['completion']}, remove_columns=['completion'])
+        else:
+            raw_ds = load_dataset(
+                ds_name,
+                dict(wikitext="wikitext-103-raw-v1", wikipedia="20200501.en")[ds_name]
+            )
+        
         if hasattr(model.config, 'n_positions'):
             maxlen = model.config.n_positions
         elif hasattr(model.config, 'max_sequence_length'):
