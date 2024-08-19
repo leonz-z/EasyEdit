@@ -149,7 +149,7 @@ def execute_knb(
     texts_targets = [[r["prompt"], r["target_new"]] for r in requests]
 
     # Configure optimizer / gradients
-    opt = torch.optim.Adam(
+    opt = torch.optim.AdamW(
         peft_model.parameters(),
         lr=hparams.lr,
         weight_decay=hparams.weight_decay,
@@ -180,6 +180,7 @@ def execute_knb(
                 ckp_path += f'_{"_".join(hparams.target_modules)}'
                 ckp_path += f'_a{hparams.knb_alpha}_pd{hparams.knb_dropout}_p{hparams.p}'
                 ckp_path += f'_rs_{hparams.use_rsknb}_b_{hparams.bias}_loss{hparams.t_loss}'
+                ckp_path += f'_wd{hparams.weight_decay}'
 
                 if not os.path.exists(ckp_path):
                     os.makedirs(ckp_path)
