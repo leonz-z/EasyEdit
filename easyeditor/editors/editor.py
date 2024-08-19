@@ -547,6 +547,7 @@ class BaseEditor:
         is_post_metrics: bool = False,
         file_obj: Optional[TextIO] = None,
         max_new_tokens_times: int = 3,
+        system_prompt: str = "你是一个乐于助人的助手。 ",
         **kwargs
     ):
         eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
@@ -561,13 +562,9 @@ class BaseEditor:
         
         def text_generate(
             model,
-            model_name,
-            hparams: HyperParams,
             tok: AutoTokenizer,
             query,
             device,
-            eval_metric: str = 'token_em',
-            test_generation = False,
             max_new_tokens = 512,
             system_prompt = "你是一个乐于助人的助手。 "
         ):
@@ -586,7 +583,7 @@ class BaseEditor:
             template_length = len(model_inputs[0])
             generated_ids = model.generate(
                 input_ids=model_inputs,
-                max_new_tokens=max_new_tokens, # 可不可以限制为正确答案的长度?
+                max_new_tokens=max_new_tokens, 
             )
             trimmed_generated_ids = generated_ids[0][template_length:]
             response = tok.decode(trimmed_generated_ids, skip_special_tokens=True)
@@ -661,23 +658,27 @@ class BaseEditor:
                         results_post = {}
                         answer_token_len = self.tok.encode(request[i]['target_new'], return_tensors="pt").shape[1]
                         answer_token_len = min(answer_token_len*max_new_tokens_times, 512)
-                        results_post['rewrite_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['prompt'], self.hparams.device, \
-                                                                     eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=answer_token_len)
-                        results_post['rephrase_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request[i]['rephrase_prompt'], self.hparams.device,\
-                                                                      eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=answer_token_len)
+                        results_post['rewrite_ans'] = text_generate(edited_model, 
+                                                                    self.tok, request[i]['prompt'], self.hparams.device,
+                                                                     max_new_tokens=answer_token_len, system_prompt=system_prompt)
+                        results_post['rephrase_ans'] = text_generate(edited_model, 
+                                                                     self.tok, request[i]['rephrase_prompt'], self.hparams.device,
+                                                                      max_new_tokens=answer_token_len, system_prompt=system_prompt)
                         por_results = []
                         for pr in request[i]['portability']['por_hop']['prompt']:
                             pr_token_len = self.tok.encode(pr, return_tensors="pt").shape[1]
                             pr_token_len = min(pr_token_len*max_new_tokens_times, 512)
-                            por_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, \
-                                                             eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=pr_token_len))
+                            por_results.append(text_generate(edited_model, 
+                                                             self.tok, pr, self.hparams.device,
+                                                             max_new_tokens=pr_token_len, system_prompt=system_prompt))
                         if 'locality' in request[i].keys() and 'loc_hop' in request[i]['locality'].keys():
                             loc_results = []
                             for pr in request[i]['locality']['loc_hop']['prompt']:
                                 loc_token_len = self.tok.encode(pr, return_tensors="pt").shape[1]
                                 loc_token_len = min(loc_token_len*max_new_tokens_times, 512)
-                                loc_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, \
-                                                                 eval_metric=eval_metric, test_generation=test_generation, max_new_tokens=loc_token_len))
+                                loc_results.append(text_generate(edited_model, 
+                                                                 self.tok, pr, self.hparams.device,
+                                                                 max_new_tokens=loc_token_len, system_prompt=system_prompt))
                             results_post['locality_ans'] = loc_results
                         results_post['portability_ans'] = por_results
                         if test_generation:
@@ -703,15 +704,29 @@ class BaseEditor:
                             LOG.info(f"{idx} editing: {request[i]['prompt']} -> {request[i]['target_new']}")
                 else:
                     results_post = {}
-                    results_post['rewrite_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request['prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
-                    results_post['rephrase_ans'] = text_generate(edited_model, self.model_name, self.hparams, self.tok, request['rephrase_prompt'], self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)
+                    answer_token_len = self.tok.encode(request['target_new'], return_tensors="pt").shape[1]
+                    answer_token_len = min(answer_token_len*max_new_tokens_times, 512)
+                    results_post['rewrite_ans'] = text_generate(edited_model, 
+                                                                self.tok, request['prompt'], self.hparams.device,
+                                                                max_new_tokens=answer_token_len, system_prompt=system_prompt)
+                    results_post['rephrase_ans'] = text_generate(edited_model, 
+                                                                 self.tok, request['rephrase_prompt'], self.hparams.device,
+                                                                  max_new_tokens=answer_token_len, system_prompt=system_prompt)
                     por_results = []
                     for pr in request['portability']['por_hop']['prompt']:
-                        por_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
+                        pr_token_len = self.tok.encode(pr, return_tensors="pt").shape[1]
+                        pr_token_len = min(pr_token_len*max_new_tokens_times, 512)
+                        por_results.append(text_generate(edited_model, 
+                                                         self.tok, pr, self.hparams.device,
+                                                        max_new_tokens=pr_token_len, system_prompt=system_prompt))
                     if 'locality' in request.keys() and 'loc_hop' in request['locality'].keys():
                         loc_results = []
+                        loc_token_len = self.tok.encode(pr, return_tensors="pt").shape[1]
+                        loc_token_len = min(loc_token_len*max_new_tokens_times, 512)
                         for pr in request['locality']['loc_hop']['prompt']:
-                            loc_results.append(text_generate(edited_model, self.model_name, self.hparams, self.tok, pr, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation))
+                            loc_results.append(text_generate(edited_model, 
+                                                             self.tok, pr, self.hparams.device,
+                                                            max_new_tokens=loc_token_len, system_prompt=system_prompt))
                         results_post['locality_ans'] = loc_results
                     results_post['portability_ans'] = por_results
                     if test_generation:
