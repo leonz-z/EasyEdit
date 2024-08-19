@@ -76,6 +76,10 @@ class KnbLayer(BaseTunerLayer):
 
         self.knb_dropout.update(nn.ModuleDict({adapter_name: knb_dropout_layer}))
         # Actual trainable parameters
+        # TODO:lzc@0818 如果length>2*r, 参数量就>lora的参数量,考虑使用低秩矩阵
+        # if length > 2*r:
+        #     self.A = nn.Linear(self.in_features, r, bias=False)
+        #     self.B = nn.Linear(r, self.out_features, bias=False)
         # TODO:lzc@0802
         # # knb_W: [in_features, length] length -> out_features knb
         # self.knb_W[adapter_name] = nn.Linear(self.in_features, length, bias=False)
@@ -210,6 +214,8 @@ class Linear(nn.Module, KnbLayer):
             if weight_name in knb_dict and layer_idx in knb_dict[weight_name]:
                 kn_idx_list = knb_dict[weight_name][layer_idx]
                 self.kn_idx_list = kn_idx_list if len(kn_idx_list) > 0 else None
+            else:
+                print(f"No knb_dict found for {weight_name} {layer_idx}")
         else:
             print("No target_name or knb_dict found in kwargs")
         # TODO: lzc@0802 length=0 may cause bug
