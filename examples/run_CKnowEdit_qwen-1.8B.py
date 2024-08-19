@@ -3,7 +3,11 @@ import os.path
 import sys
 import json
 import random
-sys.path.append('/home/lyc/TNTprojectz/KE/EasyEdit')
+path =os.getcwd()
+print(f'add module root path: {path}')
+sys.path.append(path)
+# sys.path.append('/home/lyc/TNTprojectz/KE/EasyEdit')
+
 from easyeditor import (
     FTHyperParams, 
     IKEHyperParams, 
@@ -35,7 +39,9 @@ if __name__ == "__main__":
         parser.add_argument('--is_post_metrics', default=False, action='store_true')
         parser.add_argument('--p', default=None, type=str)
         parser.add_argument('--knb_dict_path', default=None, type=str)
-        
+        parser.add_argument('--t_loss', default=None, type=float)
+        parser.add_argument('--max_new_tokens_times', default=1, type=int)
+
         parser.add_argument('--hparams_dir', type=str, default='./hparams/LoRA/Qwen-1_8B-Chat.yaml')
         parser.add_argument('--ds_size', default=None, type=int)
         parser.add_argument('--train_data_path', type=str, default='./dataset/ccks2024_know_edit/ccks-CKnowEdit.json')
@@ -163,6 +169,12 @@ if __name__ == "__main__":
         hparams.batch_size = args.batch_size
     if args.lora_type is not None:
         hparams.lora_type = args.lora_type
+    if args.t_loss is not None:
+        hparams.t_loss = args.t_loss
+    if args.max_new_tokens_times is not None:
+        max_new_tokens_times = args.max_new_tokens_times
+    else:
+        max_new_tokens_times = 1
     # pre_edit
     # args.pre_file = f"./pre_edit/{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
     # print(args.pre_file)
@@ -183,10 +195,7 @@ if __name__ == "__main__":
         encode_ike_facts(sentence_model, train_ds, hparams)
     else:
         train_ds = None
-    # 保存结果
-    if not os.path.exists(args.metrics_save_dir):
-        os.makedirs(args.metrics_save_dir)
-    
+
     save_name = f'{args.data_type}_{args.editing_method}_{hparams.model_name.split("/")[-1]}'
     if args.layers is not None:
         save_name = f'{save_name}_{args.layers}'
@@ -202,21 +211,29 @@ if __name__ == "__main__":
         save_name = f'{save_name}_{"_".join(hparams.target_modules)}'
     if args.start_idx_end_idx is not None:
         save_name = f'{args.start_idx_end_idx}_{save_name}'
-    knb_dict = None
+    knb_dict_list = None
     if args.editing_method == 'LoRA':
         save_name = f'{save_name}_r{hparams.rank}_p{hparams.lora_dropout}'
         save_name = f'{save_name}_rs{hparams.use_rslora}_a{hparams.lora_alpha}'
         save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
         hparams.p = args.p
-        save_name = args.knb_dict_path.split('/')[-1].replace('.json', '')
+        save_name = f"{args.start_idx_end_idx}_{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
         save_name += f'_{args.num_steps}'
         save_name = f'{save_name}_p{hparams.p}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
         save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
+        save_name = f'{save_name}_wd{hparams.weight_decay}_tt{max_new_tokens_times}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
             p_data_weight_layer_knb_dict = json.load(f)
         knb_dict_list = p_data_weight_layer_knb_dict[args.p]
     print(f"Hparams:\n{save_name}")
+    print(hparams)
+    # 保存结果
+    if not os.path.exists(args.metrics_save_dir+'/log'):
+        os.makedirs(args.metrics_save_dir+'/log')
+    if not os.path.exists(args.metrics_save_dir+'/result'):
+        os.makedirs(args.metrics_save_dir+'/result')
+
     # 编辑模型
     editor = BaseEditor.from_hparams(hparams)
     metrics, edited_model, _ = editor.generate_edit(
@@ -236,7 +253,8 @@ if __name__ == "__main__":
         is_post_metrics = args.is_post_metrics,
         file_obj = open(os.path.join(args.metrics_save_dir, f'log/{save_name}_log.json'), encoding='utf-8', mode='w'),
         knb_dict_list = knb_dict_list,
-        max_new_tokens_times=3,
+        max_new_tokens_times=max_new_tokens_times,
+        system_prompt="你是一位学识渊博的语文老师。"
     )
     
     json.dump(metrics,
