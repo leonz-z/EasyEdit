@@ -11,15 +11,15 @@ num_steps=120
 type=max 
 cnt=1
 
-i=1
-data_type=type2_80
+i=3
+data_type=type4_50
 
 max_new_tokens_times=4
 for batch_size in {1,10}; do
     for t_loss in {5e-2,1e-2,5e-3,1e-3}; do
         for p in {99.2,99.4,99.6,99.8}; do
             ff_attrs=mlp.c_proj
-            for skip in $(seq 0 10 70); do
+            for skip in $(seq 0 10 40); do
                 start_idx_end_idx=$skip,$((skip+10))
                 echo $i-token$max_new_tokens_times-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-Qwen-1_8B-Chat-$cnt
                 CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \

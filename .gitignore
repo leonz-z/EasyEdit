@@ -24,5 +24,5 @@ answer*.json
 nltk_data
 EasyEditCache*
 pre_edit
-ccks2024_output
+ccks2024_output*
 metrics_results
