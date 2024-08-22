@@ -224,8 +224,7 @@ if __name__ == "__main__":
         save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
         save_name = f'{save_name}_wd{hparams.weight_decay}_tt{max_new_tokens_times}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
-            p_data_weight_layer_knb_dict = json.load(f)
-        knb_dict_list = p_data_weight_layer_knb_dict[args.p]
+            knb_dict_list = json.load(f)
     print(f"Hparams:\n{save_name}")
     print(hparams)
     # 保存结果
