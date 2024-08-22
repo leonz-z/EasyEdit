@@ -221,9 +221,11 @@ if __name__ == "__main__":
         save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
         hparams.p = args.p
-        save_name = f"{args.start_idx_end_idx}_{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
-        save_name += f'_{args.num_steps}'
-        save_name = f'{save_name}_p{hparams.p}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
+        # save_name = f"{args.start_idx_end_idx}_{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
+        save_name = f"{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
+        save_name += f'_{args.num_steps}_bs{hparams.batch_size}'
+        # save_name = f'{save_name}_p{hparams.p}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
+        save_name = f'{save_name}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
         save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
         save_name = f'{save_name}_wd{hparams.weight_decay}_tt{max_new_tokens_times}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
@@ -253,13 +255,13 @@ if __name__ == "__main__":
         test_generation = True,
         sequential_edit = False,
         is_post_metrics = args.is_post_metrics,
-        file_obj = open(os.path.join(args.metrics_save_dir, f'log/{save_name}_log.json'), encoding='utf-8', mode='w'),
+        file_obj = open(os.path.join(args.metrics_save_dir, f'log/{save_name}_log.json'), encoding='utf-8', mode='a'),
         knb_dict_list = knb_dict_list,
         max_new_tokens_times=max_new_tokens_times,
         system_prompt="你是一位学识渊博的语文老师。"
     )
     
-    json.dump(metrics,
-            open(os.path.join(args.metrics_save_dir, f'result/{save_name}.json'), encoding='utf-8', mode='w'), 
-            indent=4,
-            ensure_ascii=False)
+    # json.dump(metrics,
+    #         open(os.path.join(args.metrics_save_dir, f'result/{save_name}.json'), encoding='utf-8', mode='w'),
+    #         indent=4,
+    #         ensure_ascii=False)
