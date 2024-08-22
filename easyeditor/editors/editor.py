@@ -758,9 +758,9 @@ class BaseEditor:
             # DONE:batch edit
             if hasattr(self.hparams, 'batch_size') and self.hparams.batch_size > 1:
                 for i, idx in tqdm(enumerate(range(0, len(requests), self.hparams.batch_size)), total=int(len(requests)/self.hparams.batch_size)):
-                    knb_dict = None
-                    if knb_dict_list is not None:
-                        knb_dict = knb_dict_list[i]
+                    knb_dict = knb_dict_list
+                    # if knb_dict_list is not None:
+                    #     knb_dict = knb_dict_list[i]
                     end_idx = idx+self.hparams.batch_size if idx+self.hparams.batch_size < len(requests) else len(requests)
                     request_batch = requests[idx:end_idx]
                     edited_model, weights_copy, icl_examples = edit_func(request_batch, idx, knb_dict=knb_dict, **kwargs)
@@ -782,9 +782,9 @@ class BaseEditor:
                     # batch edit后暂不评测
             else: # 无batch_size参数或者=1
                 for idx, request in enumerate(tqdm(requests, total=len(requests))):
-                    knb_dict = None
-                    if knb_dict_list is not None:
-                        knb_dict = knb_dict_list[idx]
+                    knb_dict = knb_dict_list
+                    # if knb_dict_list is not None:
+                    #     knb_dict = knb_dict_list[idx]
                     edited_model, weights_copy, icl_examples = edit_func(request, idx, knb_dict=knb_dict, **kwargs)
                     post_edit_results(all_results, request, edited_model, idx, eval_metric, test_generation, icl_examples, **kwargs)
                     if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
