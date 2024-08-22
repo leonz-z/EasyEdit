@@ -23,8 +23,8 @@ iopath
 opencv-python
 fairscale
 # qwen
-torch --index-url https://download.pytorch.org/whl/cu118
+# torch --index-url https://download.pytorch.org/whl/cu118
 tiktoken
 transformers_stream_generator
 ninja
-flash-attn --no-build-isolation
+# flash-attn --no-build-isolation
