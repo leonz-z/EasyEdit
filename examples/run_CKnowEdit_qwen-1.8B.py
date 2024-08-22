@@ -157,7 +157,10 @@ if __name__ == "__main__":
         elif args.target_modules in ['mlp', 'attn']:
             target_modules = [m for m in hparams.target_modules if args.target_modules in m]
             hparams.target_modules = target_modules
+        else:
+            hparams.target_modules = args.target_modules.split(',')
         print(f"target_modules: {hparams.target_modules}")
+
     if args.layers is not None:
         start_layer, end_layer = args.layers.split(',')
         layers = [i for i in range(int(start_layer), int(end_layer))]
@@ -225,6 +228,7 @@ if __name__ == "__main__":
         save_name = f'{save_name}_wd{hparams.weight_decay}_tt{max_new_tokens_times}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
             p_data_weight_layer_knb_dict = json.load(f)
+        print(f"p_data_weight_layer_knb_dict: {p_data_weight_layer_knb_dict.keys()}")
         knb_dict_list = p_data_weight_layer_knb_dict[args.p]
     print(f"Hparams:\n{save_name}")
     print(hparams)
