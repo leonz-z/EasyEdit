@@ -41,6 +41,7 @@ if __name__ == "__main__":
         parser.add_argument('--knb_dict_path', default=None, type=str)
         parser.add_argument('--t_loss', default=None, type=float)
         parser.add_argument('--max_new_tokens_times', default=1, type=int)
+        parser.add_argument('--objective_optimization', default=None, type=str)
 
         parser.add_argument('--hparams_dir', type=str, default='./hparams/LoRA/Qwen-1_8B-Chat.yaml')
         parser.add_argument('--ds_size', default=None, type=int)
@@ -178,6 +179,9 @@ if __name__ == "__main__":
         max_new_tokens_times = args.max_new_tokens_times
     else:
         max_new_tokens_times = 1
+    if args.objective_optimization is not None:
+        hparams.objective_optimization = args.objective_optimization
+    # hparams.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # pre_edit
     # args.pre_file = f"./pre_edit/{hparams.model_name.split('/')[-1]}_{args.data_type}_pre_edit.json"
     # print(args.pre_file)
@@ -214,6 +218,9 @@ if __name__ == "__main__":
         save_name = f'{save_name}_{"_".join(hparams.target_modules)}'
     if args.start_idx_end_idx is not None:
         save_name = f'{args.start_idx_end_idx}_{save_name}'
+    if args.objective_optimization is not None:
+        save_name = f'{save_name}_{args.objective_optimization}'
+
     knb_dict_list = None
     if args.editing_method == 'LoRA':
         save_name = f'{save_name}_r{hparams.rank}_p{hparams.lora_dropout}'
