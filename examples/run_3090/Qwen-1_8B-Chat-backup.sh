@@ -1,3 +1,4 @@
+
 DATE=$(date +"%Y-%m-%d")
 mkdir -p logs/$DATE
 source activate ke2torch23cu121
@@ -5,30 +6,137 @@ export HUGGINGFACE_CACHE=/share/huggingface/
 export PYTHONUNBUFFERED=1
 # export CUDA_VISIBLE_DEVICES=1
 
+# # PMET
+# method=PMET
+# MEMIT
+method=MEMIT
+start_idx_end_idx=0,133
+data_type=type1_133
+max_new_tokens_times=2
+
+cnt=1
+gpu=3
+layers=0,6
+CUDA_VISIBLE_DEVICES=$gpu python examples/run_CKnowEdit_qwen-1.8B.py \
+    --editing_method $method \
+    --layers $layers \
+    --start_idx_end_idx $start_idx_end_idx \
+    --data_type CKnowEdit_$data_type \
+    --metrics_save_dir ./ccks2024_output/$data_type \
+    --data_dir /share/dataset/CKnowEditType/$data_type.json \
+    --max_new_tokens_times $max_new_tokens_times \
+    > logs/$DATE/$gpu-$data_type-tt$max_new_tokens_times-$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+wait
+layers=6,12
+CUDA_VISIBLE_DEVICES=$gpu python examples/run_CKnowEdit_qwen-1.8B.py \
+    --editing_method $method \
+    --layers $layers \
+    --start_idx_end_idx $start_idx_end_idx \
+    --data_type CKnowEdit_$data_type \
+    --metrics_save_dir ./ccks2024_output/$data_type \
+    --data_dir /share/dataset/CKnowEditType/$data_type.json \
+    --max_new_tokens_times $max_new_tokens_times \
+    > logs/$DATE/$gpu-$data_type-tt$max_new_tokens_times-$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+wait
+layers=12,18
+CUDA_VISIBLE_DEVICES=$gpu python examples/run_CKnowEdit_qwen-1.8B.py \
+    --editing_method $method \
+    --layers $layers \
+    --start_idx_end_idx $start_idx_end_idx \
+    --data_type CKnowEdit_$data_type \
+    --metrics_save_dir ./ccks2024_output/$data_type \
+    --data_dir /share/dataset/CKnowEditType/$data_type.json \
+    --max_new_tokens_times $max_new_tokens_times \
+    > logs/$DATE/$gpu-$data_type-tt$max_new_tokens_times-$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+wait
+layers=18,24
+CUDA_VISIBLE_DEVICES=$gpu python examples/run_CKnowEdit_qwen-1.8B.py \
+    --editing_method $method \
+    --layers $layers \
+    --start_idx_end_idx $start_idx_end_idx \
+    --data_type CKnowEdit_$data_type \
+    --metrics_save_dir ./ccks2024_output/$data_type \
+    --data_dir /share/dataset/CKnowEditType/$data_type.json \
+    --max_new_tokens_times $max_new_tokens_times \
+    > logs/$DATE/$gpu-$data_type-tt$max_new_tokens_times-$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+
+
+# layers=12,24
+# cnt=1
+# gpu=3
+# CUDA_VISIBLE_DEVICES=$gpu python examples/run_CKnowEdit_qwen-1.8B.py \
+#     --editing_method $method \
+#     --layers $layers \
+#     --start_idx_end_idx $start_idx_end_idx \
+#     --data_type CKnowEdit_$data_type \
+#     --metrics_save_dir ./ccks2024_output/$data_type \
+#     --data_dir /share/dataset/CKnowEditType/$data_type.json \
+#     --max_new_tokens_times $max_new_tokens_times \
+#     > logs/$DATE/$gpu-$data_type-tt$max_new_tokens_times-$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+# # MEMIT
+# method=MEMIT
+# start_idx_end_idx=0,133
+# data_type=type1_133
+# max_new_tokens_times=2
+
+# # layers=0,12
+# # cnt=1
+# # gpu=0
+# # CUDA_VISIBLE_DEVICES=$gpu python examples/run_CKnowEdit_qwen-1.8B.py \
+# #     --editing_method $method \
+# #     --layers $layers \
+# #     --start_idx_end_idx $start_idx_end_idx \
+# #     --data_type CKnowEdit_$data_type \
+# #     --metrics_save_dir ./ccks2024_output/$data_type \
+# #     --data_dir /share/dataset/CKnowEditType/$data_type.json \
+# #     --max_new_tokens_times $max_new_tokens_times \
+# #     > logs/$DATE/$gpu-$data_type-tt$max_new_tokens_times-$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+
+# layers=12,24
+# cnt=1
+# gpu=3
+# CUDA_VISIBLE_DEVICES=$gpu python examples/run_CKnowEdit_qwen-1.8B.py \
+#     --editing_method $method \
+#     --layers $layers \
+#     --start_idx_end_idx $start_idx_end_idx \
+#     --data_type CKnowEdit_$data_type \
+#     --metrics_save_dir ./ccks2024_output/$data_type \
+#     --data_dir /share/dataset/CKnowEditType/$data_type.json \
+#     --max_new_tokens_times $max_new_tokens_times \
+#     > logs/$DATE/$gpu-$data_type-tt$max_new_tokens_times-$method-$layers-$start_idx_end_idx-Qwen-1_8B-Chat-$cnt.log 2>&1 &
+
+DATE=$(date +"%Y-%m-%d")
+mkdir -p logs/$DATE
+source activate ke2torch23cu121
+
+export HUGGINGFACE_CACHE=/share/huggingface/
+export PYTHONUNBUFFERED=1
+# export CUDA_VISIBLE_DEVICES=1
+
 # KNB
 method=KNB
 # 当batch_size=1时,num_steps设置小一点可能效果好,防止过拟合
-num_steps=100 # < t_loss阈值,跳出迭代训练
-batch_size=1
-type=mean # 当batch_size=1时,type=mean,max一样的
-# type=orgin 
-
-# num_steps=120
-# batch_size=10
-# type=max 
-# type=mean
-cnt=1
-
-
-# p=95.0
+# num_steps=100 # < t_loss阈值,跳出迭代训练
+# batch_size=1
+# type=max # 当batch_size=1时,type=mean,max一样的
 # 当batch_size=1时,p设置小一点可能效果好
+
+num_steps=120
+type=max 
+cnt=1
 i=3
+
+
 start_idx_end_idx=0,70
 data_type=type5_70
+
 t_loss=1e-2
 ff_attrs=mlp.c_proj
 max_new_tokens_times=2
-for p in {99.05,99.35,99.65,99.95}; do
+for batch_size in {1,2,4,8,10,16,20,30,40}; do
+    for t_loss in {5e-2,1e-2,5e-3,1e-3}; do
+        for p in {90.0,92.0,94.0,96.0,98.0,99.0,99.20,99.40,99.60,99.80,99.90}; do
+            for ff_attrs in {mlp.c_proj,mlp.w1,attn.c_proj,attn.c_attn}; do
     echo $i-token$max_new_tokens_times-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-Qwen-1_8B-Chat-$cnt
     CUDA_VISIBLE_DEVICES=$i python examples/run_CKnowEdit_qwen-1.8B.py \
         --t_loss $t_loss \
