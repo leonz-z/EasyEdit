@@ -136,6 +136,8 @@ def execute_knb(
     peft_model.model_parallel = True
     peft_model.print_trainable_parameters()
     requests = deepcopy(requests) # 训练log中观察到每次request都是一个batch_size大小
+    if not isinstance(requests, list):
+        requests = [requests]
     for request in requests:
         print(
             f"Executing KNB algo for: "
