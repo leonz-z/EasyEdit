@@ -10,7 +10,7 @@ method=KNB
 num_steps=120
 type=max 
 cnt=1
-
+ "23": [
 i=0
 data_type=type1_133
 
