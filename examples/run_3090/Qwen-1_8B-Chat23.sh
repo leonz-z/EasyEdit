@@ -1,4 +1,4 @@
-DATE=$(date +"%Y-%m-%d")
+DATE=$(da +"%Y-%m-%d")
 mkdir -p logs/$DATE
 source activate ke2torch23cu121
 export HUGGINGFACE_CACHE=/share/huggingface/
