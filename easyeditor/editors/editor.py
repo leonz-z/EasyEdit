@@ -150,6 +150,7 @@ class BaseEditor:
              portability_inputs: Optional[Dict] = None,
              sequential_edit=False,
              verbose=True,
+             file_obj: Optional[TextIO] = None,
              **kwargs
              ):
         """
@@ -179,9 +180,8 @@ class BaseEditor:
             requests = kwargs["requests"]
         else:
             requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts, locality_inputs, portability_inputs, **kwargs)
-        # **kwargs包含test_generation fix bug cjc@0529
-        # return self.edit_requests(requests, sequential_edit, verbose, **kwargs)
-        return self.edit_requests(requests, sequential_edit, verbose, test_generation=test_generation, **kwargs)
+
+        return self.edit_requests(requests, sequential_edit, verbose, test_generation=test_generation, file_obj=file_obj, **kwargs)
 
     def batch_edit(self,
                    prompts: List[str],
@@ -363,6 +363,7 @@ class BaseEditor:
              sequential_edit=False,
              verbose=True,
              test_generation=False,
+             file_obj: Optional[TextIO] = None,
              **kwargs
              ):
         """
@@ -376,7 +377,9 @@ class BaseEditor:
         eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
         if hasattr(self.hparams, 'batch_size'):  # For Singleton Editing, bs=1
             assert self.hparams.batch_size == 1, 'Single Editing: batch_size should be set to 1'
+        knb_dict_list = kwargs.pop('knb_dict_list', None)
         all_metrics = []
+        # pre_edit
         if 'pre_edit' in kwargs and kwargs['pre_edit'] is not None:
             metrics = kwargs['pre_edit']
             all_metrics = metrics
@@ -391,7 +394,7 @@ class BaseEditor:
             if 'pre_file' in kwargs and kwargs['pre_file'] is not None:
                 json.dump(all_metrics, open(kwargs['pre_file'], 'w'), indent=4)
 
-        def edit_func(request):
+        def edit_func(request, idx=None, knb_dict=None, **kwargs):
             if self.alg_name == 'IKE':
                 edited_model, weights_copy, icl_examples = self.model, {}, self.apply_algo(
                     self.model,
@@ -404,30 +407,17 @@ class BaseEditor:
                     train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None
                 )
             else:
-                if kwargs.get('knb_dict'):
-                    knb_dict = kwargs['knb_dict']
-                    edited_model, weights_copy = self.apply_algo(
-                        self.model,
-                        self.tok,
-                        [request],
-                        self.hparams,
-                        copy=False,
-                        return_orig_weights=True,
-                        keep_original_weight=False,
-                        train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
-                        knb_dict=knb_dict
-                    )
-                else:
-                    edited_model, weights_copy = self.apply_algo(
-                        self.model,
-                        self.tok,
-                        [request],
-                        self.hparams,
-                        copy=False,
-                        return_orig_weights=True,
-                        keep_original_weight=False,
-                        train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
-                    )
+                edited_model, weights_copy = self.apply_algo(
+                    idx=idx,
+                    model=self.model,
+                    tok=self.tok,
+                    requests=request,
+                    hparams=self.hparams,
+                    copy=False,
+                    return_orig_weights=True,
+                    knb_dict=knb_dict,
+                    **kwargs
+                )
                 icl_examples = None
             return edited_model, weights_copy, icl_examples
         def edit_evaluation(all_metrics, request, edited_model, idx, eval_metric, test_generation, icl_examples, **kwargs):
@@ -453,7 +443,8 @@ class BaseEditor:
                         all_metrics[idx]['post']['locality'][f'{locality_key}_acc'] = locality_result
                         all_metrics[idx]['post']['locality'].pop(f'{locality_key}_output')
                     all_metrics[idx]['pre'].pop('locality')
-
+            file_obj.writelines(json.dumps(all_metrics[idx], ensure_ascii=False) + '\n')
+            file_obj.flush()
             if verbose:
                 LOG.info(f"{idx} editing: {request['prompt']} -> {request['target_new']}  \n\n {all_metrics[idx]}")
 
@@ -463,14 +454,16 @@ class BaseEditor:
                 edited_model, weights_copy, icl_examples = edit_func(request)
             for i, request in enumerate(requests):
                 edit_evaluation(all_metrics, request, edited_model, i, eval_metric, test_generation, icl_examples, **kwargs)
+        # single edit
         else:
             for i, request in enumerate(tqdm(requests, total=len(requests))):
-                edited_model, weights_copy, icl_examples = edit_func(request)
+                knb_dict = knb_dict_list
+                edited_model, weights_copy, icl_examples = edit_func(request, i, knb_dict=knb_dict, **kwargs)
                 edit_evaluation(all_metrics, request, edited_model, i, eval_metric, test_generation, icl_examples, **kwargs)
                 if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
                     with torch.no_grad():
                         weights_copy()
-                elif self.alg_name == 'LoRA':
+                elif self.alg_name in ['LoRA', 'KNB']:
                     edited_model.unload()
                     del self.model.peft_config
                 elif self.alg_name == 'MELO':
@@ -479,7 +472,6 @@ class BaseEditor:
                     with torch.no_grad():
                         for k, v in weights_copy.items():
                             nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
-
 
         if isinstance(edited_model, LORA):
             edited_model = edited_model.model
