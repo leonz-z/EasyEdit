@@ -32,11 +32,10 @@ if __name__ == "__main__":
     def get_args():
         parser = argparse.ArgumentParser()
         parser.add_argument('--editing_method', required=True, type=str)
-        parser.add_argument('--data_dir', type=str, default='KE/EasyEdit/dataset/KnowEdit-ms/benchmark_wiki_counterfact_test_cf.json')
+        parser.add_argument('--data_dir', type=str, default='./dataset/KnowEdit-ms/benchmark_wiki_counterfact_test_cf.json')
         parser.add_argument('--data_type', type=str, default='counterfact', choices=['counterfact', 'zsre', 'wikibio', 'recent'])
         parser.add_argument('--batch_size', default=None, type=int)
         parser.add_argument('--num_steps', default=None, type=int)
-        parser.add_argument('--is_post_metrics', default=False, action='store_true')
         parser.add_argument('--p', default=None, type=str)
         parser.add_argument('--knb_dict_path', default=None, type=str)
         parser.add_argument('--t_loss', default=None, type=float)
@@ -84,7 +83,7 @@ if __name__ == "__main__":
         if args.start_idx_end_idx is not None:
             start_idx, end_idx = args.start_idx_end_idx.split(',')
             datas = datas[int(start_idx):int(end_idx)]
-        if args.datatype == 'counterfact' or args.datatype == 'recent' or args.datatype == 'zsre':
+        if args.data_type == 'counterfact' or args.data_type == 'recent' or args.data_type == 'zsre':
             prompts=[data['prompt'] for data in datas]
             subjects=[data['subject'] for data in datas]
             target_new = [data['target_new'] for data in datas]
@@ -115,7 +114,10 @@ if __name__ == "__main__":
                             prompt=pr["prompt"]
                             an=pr["ground_truth"]
                             while isinstance(an,list):
-                                an = an[0]
+                                if an==[]:
+                                    an=''
+                                else:
+                                    an = an[0]
                             if an.strip() =="":
                                 continue
                             temp_prompts.append(prompt)
@@ -146,7 +148,10 @@ if __name__ == "__main__":
                             prompt=pr["prompt"]
                             an=pr["ground_truth"]
                             while isinstance(an,list):
-                                an = an[0]
+                                if an==[]:
+                                    an=''
+                                else:
+                                    an = an[0]
                             if an.strip() =="":
                                 continue
                             temp_prompts.append(prompt)
@@ -181,7 +186,7 @@ if __name__ == "__main__":
                     'ground_truth': portability_Logical_Generalization_ans           
                 }
             }
-        if args.datatype == 'wikibio':
+        if args.data_type == 'wikibio':
             prompts=[data['prompt'] for data in datas]
             subjects=[data['subject'] for data in datas]
             target_new = [data['target_new'] for data in datas]
@@ -206,7 +211,10 @@ if __name__ == "__main__":
                             prompt=pr["prompt"]
                             an=pr["ground_truth"]
                             while isinstance(an,list):
-                                an = an[0]
+                                if an==[]:
+                                    an=''
+                                else:
+                                    an = an[0]
                             if an.strip() =="":
                                 continue
                             temp_prompts.append(prompt)
@@ -223,8 +231,8 @@ if __name__ == "__main__":
                 }
             }
 
-        return prompts, target_new, ground_truth, subjects, rephrase_prompts, locality_inputs, portability_inputs
-    prompts, target_new, ground_truth, subject, rephrase_prompts, locality_inputs, portability_inputs = get_data()
+        return prompts, target_new, subjects, locality_inputs, portability_inputs
+    prompts, target_new, subject, locality_inputs, portability_inputs = get_data()
     # 处理参数
     if args.pre_file is not None and os.path.exists(args.pre_file):
         pre_edit = json.load(open(args.pre_file,'r', encoding='utf-8'))
@@ -260,10 +268,6 @@ if __name__ == "__main__":
         hparams.lora_type = args.lora_type
     if args.t_loss is not None:
         hparams.t_loss = args.t_loss
-    if args.max_new_tokens_times is not None:
-        max_new_tokens_times = args.max_new_tokens_times
-    else:
-        max_new_tokens_times = 1
     # 保存文件名
     save_name = f'{args.data_type}_{args.editing_method}_{hparams.model_name.split("/")[-1]}'
     if args.layers is not None:
@@ -288,12 +292,12 @@ if __name__ == "__main__":
         save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
         hparams.p = args.p
-        # save_name = f"{args.start_idx_end_idx}_{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
-        save_name = f"{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
+        save_name = f"{args.start_idx_end_idx}_{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
+        # save_name = f"{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
         save_name += f'_{args.num_steps}_bs{hparams.batch_size}'
         save_name = f'{save_name}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
         save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
-        save_name = f'{save_name}_wd{hparams.weight_decay}_tt{max_new_tokens_times}'
+        save_name = f'{save_name}_wd{hparams.weight_decay}'
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
             knb_dict_list = json.load(f)
     print(f"Hparams:\n{save_name}")
