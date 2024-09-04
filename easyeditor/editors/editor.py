@@ -85,6 +85,7 @@ class BaseEditor:
                 torch_dtype = torch.bfloat16
             else:
                 torch_dtype = torch.float32
+            LOG.info(f"Using device:{device_map} torch_dtype:{torch_dtype}")
             # load model and tokenizer
             if 't5' in self.model_name.lower():
                 self.model = T5ForConditionalGeneration.from_pretrained(self.model_name, torch_dtype=torch_dtype, device_map=device_map)
@@ -276,14 +277,15 @@ class BaseEditor:
             all_metrics.extend(chunk_metrics)
         return all_metrics, edited_model, weights_copy
 
-    def batch_edit_new(self,
+    def batch_edit_knb(self,
                    prompts: List[str],
                    target_new: List[str],
                    ground_truth: Optional[List[str]] = None,
                    rephrase_prompts: Optional[List[str]] = None,
                    locality_inputs:  Optional[Dict] = None,
                    portability_inputs: Optional[Dict] = None,
-                   keep_original_weight=False,
+                   file_obj: Optional[TextIO] = None,
+                   knb_dict_list=None,
                    verbose=True,
                    **kwargs
                    ):
@@ -293,7 +295,32 @@ class BaseEditor:
         `ground_truth`: str
             the ground truth / expected output
         """
+        def edit_evaluation(all_metrics, request, edited_model, idx, eval_metric, test_generation, **kwargs):
+            all_metrics[idx].update({
+                'case_id': idx,
+                "requested_rewrite": request,
+                "post": compute_edit_quality(edited_model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation),
+            })
+            if "metric_kwargs" in kwargs:
+                all_metrics[idx].update(compute_sent_metric(self.model, edited_model, self.model_name, self.hparams, self.tok,metric_kwargs=kwargs["metric_kwargs"][idx], device=self.hparams.device))
+            if 'locality' in all_metrics[idx]['post'].keys():
+                for locality_key in request['locality'].keys():
+                    locality_result = []
+                    for ans, label in zip(all_metrics[idx]['post']['locality'][f'{locality_key}_output'], all_metrics[idx]['pre']['locality'][f'{locality_key}_output']):
+                        locality_result.append(np.mean(np.equal(ans, label)))
+                    all_metrics[idx]['post']['locality'][f'{locality_key}_acc'] = locality_result
+                    all_metrics[idx]['post']['locality'].pop(f'{locality_key}_output')
+                all_metrics[idx]['pre'].pop('locality')
+            file_obj.writelines(json.dumps(all_metrics[idx], ensure_ascii=False) + '\n')
+            file_obj.flush()
+            if verbose:
+                LOG.info(f"{idx} editing: {request['prompt']} -> {request['target_new']}  \n\n {all_metrics[idx]}")
+        
+        # 处理参数并判断参数是否正确
         assert len(prompts) == len(target_new)
+        # assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
+        assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
+        eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
         test_generation = kwargs['test_generation'] if 'test_generation' in kwargs.keys() else False
         if ground_truth is not None:
             if isinstance(ground_truth, str):
@@ -302,60 +329,53 @@ class BaseEditor:
                 assert len(ground_truth) == len(prompts)
         else: # Default ground truth is <|endoftext|>
             ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
-
-
-        assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
-        # 2024-7-13 locality_inputs portability_inputs
-        requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
-                                    locality_inputs, portability_inputs, **kwargs)
-        torch.cuda.empty_cache()
-        assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
         
-        # for record_chunks in _chunks(requests, self.hparams.batch_size):
-        start = time()
-        if kwargs.get('knb_dict'):
-            knb_dict = kwargs['knb_dict']
-            edited_model = self.apply_algo(
-                self.model,
-                self.tok,
-                requests,
-                self.hparams,
-                copy=False,
-                return_orig_weights=True,
-                keep_original_weight=False,
-                train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
-                knb_dict=knb_dict
-            )
-            torch.cuda.empty_cache()
-        else:
-            edited_model = self.apply_algo(
-                self.model,
-                self.tok,
-                requests,
-                self.hparams,
-                copy=False,
-                return_orig_weights=True,
-                keep_original_weight=keep_original_weight,
-            )
-        exec_time = time() - start
-        LOG.info(f"Execution editing took {exec_time}")
-        
-        all_metrics = []
+        # pre_edit
+        all_metrics=[]
         if 'pre_edit' in kwargs and kwargs['pre_edit'] is not None:
             metrics = kwargs['pre_edit']
             all_metrics = metrics
-        start = time()
-        eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
-        for i, request in enumerate(requests):
-            all_metrics[i].update({
-                "case_id": i,
-                "requested_rewrite": request,
-                "time": exec_time,
-                "post": compute_edit_quality(edited_model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation),
-            })
+        else:
+            for i, request in enumerate(tqdm(requests)):
+                metrics = {"pre": compute_edit_quality(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)}
+                all_metrics.append(metrics)
+            if 'pre_file' in kwargs and kwargs['pre_file'] is not None:
+                json.dump(all_metrics, open(kwargs['pre_file'], 'w'), indent=4)
+        requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
+                                    locality_inputs, portability_inputs, **kwargs)
+        
+        # apply_knb_to_model
+        for i, idx in tqdm(enumerate(range(0, len(requests), self.hparams.batch_size)), total=int(len(requests)/self.hparams.batch_size)):
+            end_idx = min(idx+self.hparams.batch_size, len(requests))
+            request_batch = requests[idx:end_idx]
+            if isinstance(knb_dict_list, list):
+                knb_dict = knb_dict_list[i]
+            else:
+                knb_dict = knb_dict_list
+            # batch knb edit
+            start = time()
+            edited_model, weights_copy = self.apply_algo(
+                idx=idx,
+                model=self.model,
+                tok=self.tok,
+                requests=request_batch,
+                hparams=self.hparams,
+                copy=False,
+                return_orig_weights=False,
+                keep_original_weight=True,
+                knb_dict=knb_dict
+            )
+            exec_time = time() - start
+            LOG.info(f"Execution editing took {exec_time}")
+            # evaluation
+            for j, request in enumerate(request_batch):
+                new_idx = idx+j
+                edit_evaluation(all_metrics, request, edited_model, new_idx, eval_metric, test_generation)
+
+            edited_model.unload()
+            del self.model.peft_config # 每个batch request对应不同的knb-dict,重新设置peft config
             torch.cuda.empty_cache()
-            
-        LOG.info(f"Evaluation took {time() - start}")
+
         return all_metrics
 
     def edit_requests(self,
@@ -496,7 +516,7 @@ class BaseEditor:
         ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
 
 
-        assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
+        # assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
 
         requests = _prepare_requests(prompts, target_new, ground_truth)
 
