@@ -114,6 +114,7 @@ def execute_knb(
 
     if not keep_original_weight and hasattr(model,'peft_config'):
         peft_model = model
+        print('execute_knb -> not keep_original_weight and hasattr(model,"peft_config")')
     else:
         if kwargs.get('knb_dict'):
             knb_dict = kwargs['knb_dict']
@@ -173,20 +174,20 @@ def execute_knb(
         for data in chunks(texts_targets, hparams.batch_size):
             txt, tgt = zip(*data)
             knb_forward(peft_model, txt, tgt, device, tok, loss_meter, opt)
-            
-        if hparams.batch_size >= 10:
-            if (it+1)%20 == 0 or loss_meter.val < t_loss:
-                ckp_path = f'/share/ccks2024_output/knb/checkpoints_{hparams.batch_size}_{hparams.num_steps}/'
-                ckp_path += f'{idx}_{idx+hparams.batch_size}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}'
-                ckp_path += f'_{"_".join(hparams.layers)}'
-                ckp_path += f'_{"_".join(hparams.target_modules)}'
-                ckp_path += f'_a{hparams.knb_alpha}_pd{hparams.knb_dropout}_p{hparams.p}'
-                ckp_path += f'_rs_{hparams.use_rsknb}_b_{hparams.bias}_loss{hparams.t_loss}'
-                ckp_path += f'_wd{hparams.weight_decay}'
+        # 保存checkpoint太占存储空间,而且也并不方便快速得到计算结构,暂不保存checkpoints,2024年9月4日
+        # if hparams.batch_size >= 10:
+        #     if (it+1)%20 == 0 or loss_meter.val < t_loss:
+        #         ckp_path = f'/share/ccks2024_output/knb/checkpoints_{hparams.batch_size}_{hparams.num_steps}/'
+        #         ckp_path += f'{idx}_{idx+hparams.batch_size}_{it+1}_{hparams.alg_name}_CKnowEdit_{hparams.model_name}'
+        #         ckp_path += f'_{"_".join(hparams.layers)}'
+        #         ckp_path += f'_{"_".join(hparams.target_modules)}'
+        #         ckp_path += f'_a{hparams.knb_alpha}_pd{hparams.knb_dropout}_p{hparams.p}'
+        #         ckp_path += f'_rs_{hparams.use_rsknb}_b_{hparams.bias}_loss{hparams.t_loss}'
+        #         ckp_path += f'_wd{hparams.weight_decay}'
 
-                if not os.path.exists(ckp_path):
-                    os.makedirs(ckp_path)
-                peft_model.save_pretrained(ckp_path)                
+        #         if not os.path.exists(ckp_path):
+        #             os.makedirs(ckp_path)
+        #         peft_model.save_pretrained(ckp_path)                
         if loss_meter.val < t_loss:
             print(f"Epoch: {it} Batch loss {loss_meter.val} < {t_loss}")
             break
