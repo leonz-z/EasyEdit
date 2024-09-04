@@ -17,7 +17,7 @@ data_type=counterfact
 
 ff_attrs=mlp.down_proj
 p=99.85
-t_loss=1e-3
+t_loss=1e-1
 batch_size=1
 
 start_idx_end_idx=0,400
@@ -36,7 +36,7 @@ CUDA_VISIBLE_DEVICES=$i nohup python examples/run_knowedit.py \
     --hparams_dir ./hparams/KNB/Llama-2-7b-ms.yaml \
     --pre_file ./pre_edit/Llama-2-7b-hf_counterfact_pre_edit_all.json \
     > logs/$DATE/$i-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-Llama-2-7b-$cnt.log 2>&1 &
-    
+
 i=1
 start_idx_end_idx=400,885
 CUDA_VISIBLE_DEVICES=$i nohup python examples/run_knowedit.py \
