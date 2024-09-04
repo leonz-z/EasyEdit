@@ -85,7 +85,9 @@ class KnbLayer(BaseTunerLayer):
         # self.knb_W[adapter_name] = nn.Linear(self.in_features, length, bias=False)
         # 知识神经元论文中的梯度归因方法,定位到的kn_idx是下一层的in_features
         # knb_W: [lenght, out_features] length -> in_features knb
+        # DO: lzc@0904 3090之前的gpu不支持bf16,如v100
         self.knb_W[adapter_name] = nn.Linear(length, self.out_features, bias=False)
+        # self.knb_W[adapter_name] = nn.Linear(length, self.out_features, bias=False, dtype=torch.float16)
         if use_rsknb:
             self.scaling[adapter_name] = knb_alpha / math.sqrt(length)
         else:
@@ -228,7 +230,7 @@ class Linear(nn.Module, KnbLayer):
             init_knb_weights=init_knb_weights,
             use_rsknb=use_rsknb,
         )
-    def get_delta_weight(self, active_adapter) -> torch.Tensor:
+    def get_delta_weight(self, active_adapter, dtype) -> torch.Tensor:
         """
         Compute the delta weight for the given adapter.
 
@@ -237,15 +239,16 @@ class Linear(nn.Module, KnbLayer):
                 The name of the adapter for which the delta weight should be computed.
         """
         device = self.knb_W[active_adapter].weight.device
-        dtype = self.knb_W[active_adapter].weight.dtype
+        knb_dtype = self.knb_W[active_adapter].weight.dtype
+        # print(f"knb_W.dtype: {knb_dtype} x.dtype: {dtype}")
         # nn.Linear weight = Parameter(torch.empty((out_features, in_features), **factory_kwargs))
         delta_W = torch.zeros(self.out_features, self.in_features, device=device, dtype=dtype)
         dim1, dim2 = self.knb_W[active_adapter].weight.shape
         if self.kn_idx_list is not None:
             if dim1 < self.out_features and dim2 == self.in_features:
-                delta_W[self.kn_idx_list, :] = self.knb_W[active_adapter].weight
+                delta_W[self.kn_idx_list, :] = self.knb_W[active_adapter].weight.to(dtype=dtype)
             elif dim2 < self.in_features and dim1 == self.out_features:
-                delta_W[:, self.kn_idx_list] = self.knb_W[active_adapter].weight
+                delta_W[:, self.kn_idx_list] = self.knb_W[active_adapter].weight.to(dtype=dtype)
             return delta_W
         else:
             return delta_W # 注意这里返回的是全0张量
@@ -327,14 +330,14 @@ class Linear(nn.Module, KnbLayer):
             for active_adapter in self.active_adapters:
                 if active_adapter not in self.knb_W.keys():
                     continue
-                knb_W = self.knb_W[active_adapter]
+                # TODO: lzc@0904 x的dtype bf16升到knb_W的dtype fp32,对准确率是否有提升???
+                # knb_W = self.knb_W[active_adapter]
+                # x = x.to(knb_W.weight.dtype)
                 dropout = self.knb_dropout[active_adapter]
-                x = x.to(knb_W.weight.dtype)
                 # 维度问题
                 if self.kn_idx_list is not None:
                     scaling = self.scaling[active_adapter]
-                    delta_w = self.get_delta_weight(active_adapter) # [out_features, in_features]
-                    delta_w = delta_w.to(dtype=x.dtype)
+                    delta_w = self.get_delta_weight(active_adapter, dtype=x.dtype) # [out_features, in_features]
                     result += scaling * (dropout(x) @ delta_w.T) # [batch_size, seq_len, in_features]@[in_features, out_features] = [batch_size, seq_len, out_features]
 
             result = result.to(torch_result_dtype)
