@@ -307,7 +307,7 @@ class BaseEditor:
         assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
         # 2024-7-13 locality_inputs portability_inputs
         requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
-                                          locality_inputs, portability_inputs, **kwargs)
+                                    locality_inputs, portability_inputs, **kwargs)
         torch.cuda.empty_cache()
         assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
         
@@ -475,8 +475,8 @@ class BaseEditor:
 
         if isinstance(edited_model, LORA):
             edited_model = edited_model.model
-        if len(all_metrics) != 0:
-            summary_metrics(all_metrics)
+        # if len(all_metrics) != 0:
+        #     summary_metrics(all_metrics)
 
         return all_metrics, edited_model, weights_copy
 
