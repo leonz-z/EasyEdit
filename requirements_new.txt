@@ -23,6 +23,7 @@ iopath
 opencv-python
 fairscale
 # qwen
+# torch需要手动安装
 # torch --index-url https://download.pytorch.org/whl/cu118
 tiktoken
 transformers_stream_generator
