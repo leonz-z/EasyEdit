@@ -316,21 +316,21 @@ if __name__ == "__main__":
             subject=subject,
             locality_inputs=locality_inputs,
             portability_inputs=portability_inputs,
-            keep_original_weight=True,
             pre_edit=pre_edit,
+            pre_file=args.pre_file,
             test_generation=True,
             knb_dict_list=knb_dict_list,
             file_obj = open(os.path.join(args.metrics_save_dir, f'log/{save_name}_log.json'), encoding='utf-8', mode='a'),
         )
     else:
-        metrics, edited_model, _ = editor.batch_edit(
+        metrics= editor.batch_edit_knb(
             prompts=prompts,
             target_new=target_new,
             subject=subject,
             locality_inputs=locality_inputs,
             portability_inputs=portability_inputs,
-            keep_original_weight=True,
             pre_edit=pre_edit,
+            pre_file=args.pre_file,
             test_generation=True,
             knb_dict_list=knb_dict_list,
             file_obj = open(os.path.join(args.metrics_save_dir, f'log/{save_name}_log.json'), encoding='utf-8', mode='a'),
