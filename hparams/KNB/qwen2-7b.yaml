@@ -1,0 +1,21 @@
+alg_name: KNB
+model_name: qwen2-7b
+device: 0
+
+layers: []
+num_steps: 30
+batch_size: 1
+max_length: 30
+lr: 5e-3
+weight_decay: 0 # 1e-3 ~ 1e-5
+kl_factor: 0
+norm_constraint: false
+model_parallel: true
+knb_alpha: 1 # 需要统计一下p 99-100每层knb的数量.结合use_rsknb,实现knb多的层,乘以较小的常数因子;knb较少的层,乘以较多的常数因子.
+knb_dropout: 0.1 # 第一步为了Acc,暂时设置为0,然后逐步提交,为了鲁棒性
+use_rsknb: true # knb_alpha/sqrt(knb_len)
+target_modules: ['mlp.down_proj']
+bias: none # TODO:knb是否现实了,存疑?已经实现
+p: null # 通过命令行设置
+t_loss: 1e-2 # 有weight_decay和dropout这里设置为1e-3
+bf16: true
