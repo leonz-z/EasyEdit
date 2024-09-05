@@ -7,18 +7,23 @@ export PYTHONUNBUFFERED=1
 
 # KNB
 method=KNB
-num_steps=120
-type=max 
-model=Llama-2-7b
+data_type=counterfact
+num_steps=100
 cnt=1
 
-data_type=counterfact
-
-ff_attrs=mlp.down_proj
-p=99.85
+type=max 
+p=99
 t_loss=1e-1
+batch_size=50
 
-start_idx_end_idx=0,400
+model=llama3-8b
+ff_attrs=mlp.up_proj
+next_token=answer_next_token # argmax_next_token
+# knb_dict_path=/root/knb-dict-2024/$model/$data_type/${next_token}_target_new/$ff_attrs/bs$batch_size-p$p-$type.json \
+knb_dict_path=/root/knb_dict/test.json
+
+i=0
+start_idx_end_idx=0,885
 CUDA_VISIBLE_DEVICES=$i nohup python examples/run_knowedit.py \
     --target_modules $ff_attrs \
     --t_loss $t_loss \
@@ -30,9 +35,9 @@ CUDA_VISIBLE_DEVICES=$i nohup python examples/run_knowedit.py \
     --metrics_save_dir ./knb_output/$data_type \
     --data_dir ./dataset/KnowEdit-ms/benchmark_wiki_counterfact_test_cf.json \
     --start_idx_end_idx $start_idx_end_idx \
-    --knb_dict_path ../knb_dict/test.json \
-    --hparams_dir ./hparams/KNB/Llama-2-7b-ms.yaml \
-    --pre_file ./pre_edit/Llama-2-7b-hf_counterfact_pre_edit_all.json \
+    --knb_dict_path $knb_dict_path \
+    --hparams_dir ./hparams/KNB/$model.yaml \
+    --pre_file ./pre_edit/$model_pre_edit.json \
     > logs/$DATE/$i-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-Llama-2-7b-$cnt.log 2>&1 &
 
 

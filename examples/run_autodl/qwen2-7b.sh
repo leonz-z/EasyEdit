@@ -16,7 +16,7 @@ p=99
 t_loss=1e-1
 batch_size=50
 
-model=qwen1.5-7b
+model=qwen2-7b
 ff_attrs=mlp.up_proj
 next_token=answer_next_token # argmax_next_token
 # knb_dict_path=/root/knb-dict-2024/$model/$data_type/${next_token}_target_new/$ff_attrs/bs$batch_size-p$p-$type.json \
