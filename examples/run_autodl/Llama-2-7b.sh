@@ -1,7 +1,7 @@
 DATE=$(date +"%Y-%m-%d")
 mkdir -p logs/$DATE
 source activate base
-export HUGGINGFACE_CACHE=/root/autodl-tmp/
+export HUGGINGFACE_CACHE=/root/autodl-fs/
 export PYTHONUNBUFFERED=1
 # export CUDA_VISIBLE_DEVICES=1
 
