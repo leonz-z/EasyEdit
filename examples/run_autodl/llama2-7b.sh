@@ -37,5 +37,5 @@ CUDA_VISIBLE_DEVICES=$i nohup python examples/run_knowedit.py \
     --start_idx_end_idx $start_idx_end_idx \
     --knb_dict_path $knb_dict_path \
     --hparams_dir ./hparams/KNB/$model.yaml \
-    --pre_file ./pre_edit/$model_pre_edit.json \
+    --pre_file ./pre_edit/${model}_pre_edit_$start_idx_end_idx.json \
     > logs/$DATE/$i-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
