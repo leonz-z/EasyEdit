@@ -329,7 +329,9 @@ class BaseEditor:
                 assert len(ground_truth) == len(prompts)
         else: # Default ground truth is <|endoftext|>
             ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
-        
+        # 处理编辑数据成统一的格式
+        requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
+                                    locality_inputs, portability_inputs, **kwargs)
         # pre_edit
         all_metrics=[]
         if 'pre_edit' in kwargs and kwargs['pre_edit'] is not None:
@@ -341,8 +343,6 @@ class BaseEditor:
                 all_metrics.append(metrics)
             if 'pre_file' in kwargs and kwargs['pre_file'] is not None:
                 json.dump(all_metrics, open(kwargs['pre_file'], 'w'), indent=4)
-        requests = _prepare_requests(prompts, target_new, ground_truth, rephrase_prompts,
-                                    locality_inputs, portability_inputs, **kwargs)
         
         # apply_knb_to_model
         for i, idx in tqdm(enumerate(range(0, len(requests), self.hparams.batch_size)), total=int(len(requests)/self.hparams.batch_size)):
