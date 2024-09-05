@@ -23,7 +23,7 @@ checkpoint
 answer*.json
 nltk_data
 EasyEditCache*
-# pre_edit
+pre_edit
 ccks2024_output*
 metrics_results
 *.csv
