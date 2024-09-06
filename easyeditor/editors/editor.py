@@ -342,7 +342,7 @@ class BaseEditor:
                 metrics = {"pre": compute_edit_quality(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device, eval_metric=eval_metric, test_generation=test_generation)}
                 all_metrics.append(metrics)
             if 'pre_file' in kwargs and kwargs['pre_file'] is not None:
-                print(f'save {kwargs['pre_file']}')
+                print(f'save {kwargs["pre_file"]}')
                 json.dump(all_metrics, open(kwargs['pre_file'], 'w'), indent=4)
         
         # apply_knb_to_model
