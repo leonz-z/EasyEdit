@@ -40,18 +40,22 @@ knb_dict_path=/root/autodl-fs/knb-dict-2024/$model/$data_type/${next_token}_targ
 # knb_dict_path=/root/knb_dict/test.json
 
 cnt=1
-gpu=0
-CUDA_VISIBLE_DEVICES=$gpu nohup python examples/run_knowedit.py \
-    --target_modules $ff_attrs \
-    --t_loss $t_loss \
-    --batch_size $batch_size \
-    --num_steps $num_steps \
-    --editing_method $method \
-    --p $p \
-    --data_type $data_type \
-    --data_dir $data_dir \
-    --start_idx_end_idx $start_idx_end_idx \
-    --knb_dict_path $knb_dict_path \
-    --hparams_dir ./hparams/KNB/$model.yaml \
-    --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
-    > logs/$DATE/$i-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
+# gpu=0
+for gpu in $(seq 0 2); do
+    start_idx_end_idx=$(($gpu*295)),$(($gpu*295+295))
+    echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
+    CUDA_VISIBLE_DEVICES=$gpu nohup python examples/run_knowedit.py \
+        --target_modules $ff_attrs \
+        --t_loss $t_loss \
+        --batch_size $batch_size \
+        --num_steps $num_steps \
+        --editing_method $method \
+        --p $p \
+        --data_type $data_type \
+        --data_dir $data_dir \
+        --start_idx_end_idx $start_idx_end_idx \
+        --knb_dict_path $knb_dict_path \
+        --hparams_dir ./hparams/KNB/$model.yaml \
+        --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
+        > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
+done
