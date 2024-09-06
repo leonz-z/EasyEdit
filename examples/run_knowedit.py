@@ -40,7 +40,7 @@ if __name__ == "__main__":
         parser.add_argument('--knb_dict_path', default=None, type=str)
         parser.add_argument('--t_loss', default=None, type=float)
 
-        parser.add_argument('--metrics_save_dir', default='./knb_output/', type=str)
+        parser.add_argument('--metrics_save_dir', default='./knb_output/', type=str) 
         parser.add_argument('--hparams_dir', type=str, default='./hparams/KNB/Llama-2-7b-ms.yaml')
         parser.add_argument('--pre_file', default='./pre_edit/Llama-2-7b-hf_counterfact_pre_edit_all_v2.json', type=str)
         parser.add_argument('--layers', default=None, type=str)
@@ -291,17 +291,19 @@ if __name__ == "__main__":
         save_name = f'{save_name}_rs{hparams.use_rslora}_a{hparams.lora_alpha}'
         save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
-        hparams.p = args.p
-        save_name = f"{args.start_idx_end_idx}_{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
-        # save_name = f"{args.knb_dict_path.split('/')[-1].replace('.json', '')}"
-        save_name += f'_{args.num_steps}_bs{hparams.batch_size}'
+# knb_dict_path=/root/autodl-fs/knb-dict-2024/$model/$data_type/${next_token}_target_new/$ff_attrs/bs$batch_size-p$p-$type.json \
+        knb_save_path = args.knb_dict_path.replace('knb-dict-2024', 'knb-output').replace('.json', '')
+        print(f"knb_save_path: {knb_save_path}")
+        args.metrics_save_dir = knb_save_path
+        save_name = f"{args.start_idx_end_idx}_{args.num_steps}"
         save_name = f'{save_name}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
         save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
         save_name = f'{save_name}_wd{hparams.weight_decay}'
+        print(f"save_name: {save_name}")
+
         with open(args.knb_dict_path, 'r', encoding='utf-8') as f:
             knb_dict_list = json.load(f)
-    print(f"Hparams:\n{save_name}")
-    print(hparams)
+    print(f'hparams:\n{hparams}')
     # 保存结果
     if not os.path.exists(args.metrics_save_dir+'/log'):
         os.makedirs(args.metrics_save_dir+'/log')
