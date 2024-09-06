@@ -10,8 +10,7 @@ output
 scripts
 # peft
 # dataset
-logs
-log
+log*
 results
 checkpoint
 metrics
