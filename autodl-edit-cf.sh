@@ -45,7 +45,8 @@ cnt=1
 batch=$((885/$gpus))
 
 # t_loss
-for t_loss in 1e-1 5e-2 1e-2 5e-3 1e-3; do
+# for t_loss in 1e-1 5e-2 1e-2 5e-3 1e-3; do
+for t_loss in 1e-1 2e-1 3e-1 4e-1 5e-1; do
     for gpu in $(seq 0 $(($gpus-1))); do
         start_idx_end_idx=$(($gpu*$batch)),$(($gpu*$batch+$batch))
         echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
@@ -63,7 +64,7 @@ for t_loss in 1e-1 5e-2 1e-2 5e-3 1e-3; do
             --knb_dict_path $knb_dict_path \
             --hparams_dir ./hparams/KNB/$model.yaml \
             --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
-            > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1
+            > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
     done
     wait
 done
