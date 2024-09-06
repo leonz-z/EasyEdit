@@ -5,15 +5,15 @@ export HUGGINGFACE_CACHE=/root/autodl-fs/
 export PYTHONUNBUFFERED=1
 # export CUDA_VISIBLE_DEVICES=1
 
-# model
-model=gpt-j-6b
-ff_attrs=mlp.fc_out
+# # model
+# model=gpt-j-6b
+# ff_attrs=mlp.fc_out
 
 # model=llama3-8b
-# model=llama2-7b
+model=llama2-7b
 # model=qwen1.5-7b
 # model=qwen2-7b
-# ff_attrs=mlp.down_proj
+ff_attrs=mlp.down_proj
 
 # model=qwen-7b
 # model=gpt2
@@ -44,9 +44,88 @@ gpus=5
 cnt=1
 batch=$((885/$gpus))
 
+type=mean 
+p=99.9
 # t_loss
-# for t_loss in 1e-1 5e-2 1e-2 5e-3 1e-3; do
-for t_loss in 1e-1 2e-1 3e-1 4e-1 5e-1; do
+for t_loss in 1e-1 2e-1 3e-1 4e-1 5e-1 6e-1 7e-1 8e-1 9e-1 5e-2 1e-2 5e-3 1e-3; do
+    for gpu in $(seq 0 $(($gpus-1))); do
+        start_idx_end_idx=$(($gpu*$batch)),$(($gpu*$batch+$batch))
+        echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
+
+        CUDA_VISIBLE_DEVICES=$gpu python examples/run_knowedit.py \
+            --target_modules $ff_attrs \
+            --t_loss $t_loss \
+            --batch_size $batch_size \
+            --num_steps $num_steps \
+            --editing_method $method \
+            --p $p \
+            --data_type $data_type \
+            --data_dir $data_dir \
+            --start_idx_end_idx $start_idx_end_idx \
+            --knb_dict_path $knb_dict_path \
+            --hparams_dir ./hparams/KNB/$model.yaml \
+            --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
+            > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
+    done
+    wait
+done
+
+type=max 
+p=99.9
+# t_loss
+for t_loss in 1e-1 2e-1 3e-1 4e-1 5e-1 6e-1 7e-1 8e-1 9e-1 5e-2 1e-2 5e-3 1e-3; do
+    for gpu in $(seq 0 $(($gpus-1))); do
+        start_idx_end_idx=$(($gpu*$batch)),$(($gpu*$batch+$batch))
+        echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
+
+        CUDA_VISIBLE_DEVICES=$gpu python examples/run_knowedit.py \
+            --target_modules $ff_attrs \
+            --t_loss $t_loss \
+            --batch_size $batch_size \
+            --num_steps $num_steps \
+            --editing_method $method \
+            --p $p \
+            --data_type $data_type \
+            --data_dir $data_dir \
+            --start_idx_end_idx $start_idx_end_idx \
+            --knb_dict_path $knb_dict_path \
+            --hparams_dir ./hparams/KNB/$model.yaml \
+            --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
+            > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
+    done
+    wait
+done
+
+type=mean 
+p=90
+# t_loss
+for t_loss in 1e-1 2e-1 3e-1 4e-1 5e-1 6e-1 7e-1 8e-1 9e-1 5e-2 1e-2 5e-3 1e-3; do
+    for gpu in $(seq 0 $(($gpus-1))); do
+        start_idx_end_idx=$(($gpu*$batch)),$(($gpu*$batch+$batch))
+        echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
+
+        CUDA_VISIBLE_DEVICES=$gpu python examples/run_knowedit.py \
+            --target_modules $ff_attrs \
+            --t_loss $t_loss \
+            --batch_size $batch_size \
+            --num_steps $num_steps \
+            --editing_method $method \
+            --p $p \
+            --data_type $data_type \
+            --data_dir $data_dir \
+            --start_idx_end_idx $start_idx_end_idx \
+            --knb_dict_path $knb_dict_path \
+            --hparams_dir ./hparams/KNB/$model.yaml \
+            --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
+            > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
+    done
+    wait
+done
+
+type=max 
+p=90
+# t_loss
+for t_loss in 1e-1 2e-1 3e-1 4e-1 5e-1 6e-1 7e-1 8e-1 9e-1 5e-2 1e-2 5e-3 1e-3; do
     for gpu in $(seq 0 $(($gpus-1))); do
         start_idx_end_idx=$(($gpu*$batch)),$(($gpu*$batch+$batch))
         echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
