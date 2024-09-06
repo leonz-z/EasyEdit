@@ -25,7 +25,7 @@ method=KNB
 type=max 
 p=99.9
 t_loss=1e-1
-batch_size=30
+batch_size=20
 num_steps=100
 
 # dataset 
