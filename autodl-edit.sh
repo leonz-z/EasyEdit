@@ -39,7 +39,26 @@ next_token=answer_next_token # argmax_next_token
 knb_dict_path=/root/autodl-fs/knb-dict-2024/$model/$data_type/${next_token}_target_new/$ff_attrs/bs$batch_size-p$p-$type.json \
 # knb_dict_path=/root/knb_dict/test.json
 
-start_idx_end_idx=295,590
+# start_idx_end_idx=0,295
+# gpu=0
+# cnt=1
+# echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
+# CUDA_VISIBLE_DEVICES=$gpu nohup python examples/run_knowedit.py \
+#     --target_modules $ff_attrs \
+#     --t_loss $t_loss \
+#     --batch_size $batch_size \
+#     --num_steps $num_steps \
+#     --editing_method $method \
+#     --p $p \
+#     --data_type $data_type \
+#     --data_dir $data_dir \
+#     --start_idx_end_idx $start_idx_end_idx \
+#     --knb_dict_path $knb_dict_path \
+#     --hparams_dir ./hparams/KNB/$model.yaml \
+#     --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
+#     > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
+
+start_idx_end_idx=590,885
 gpu=1
 cnt=1
 echo $gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt
