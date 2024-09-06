@@ -15,6 +15,11 @@ ff_attrs=mlp.fc_out
 # model=qwen2-7b
 # ff_attrs=mlp.down_proj
 
+# model=qwen-7b
+# model=gpt2
+# model=gpt-neo-xxx
+# ff_attrs=mlp.c_proj
+
 # KNB
 method=KNB
 type=max 

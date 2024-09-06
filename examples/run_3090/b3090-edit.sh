@@ -1,7 +1,7 @@
 DATE=$(date +"%Y-%m-%d")
 mkdir -p logs/$DATE
-source activate base
-export HUGGINGFACE_CACHE=/root/autodl-fs/
+source activate ke2torch23cu121
+export HUGGINGFACE_CACHE=/share/huggingface/
 export PYTHONUNBUFFERED=1
 # export CUDA_VISIBLE_DEVICES=1
 
@@ -14,6 +14,11 @@ ff_attrs=mlp.fc_out
 # model=qwen1.5-7b
 # model=qwen2-7b
 # ff_attrs=mlp.down_proj
+
+# model=qwen-7b
+# model=gpt2
+# model=gpt-neo-xxx
+# ff_attrs=mlp.c_proj
 
 # KNB
 method=KNB
@@ -31,7 +36,7 @@ start_idx_end_idx=0,885
 
 # knb dict
 next_token=answer_next_token # argmax_next_token
-knb_dict_path=/root/autodl-fs/knb-dict-2024/$model/$data_type/${next_token}_target_new/$ff_attrs/bs$batch_size-p$p-$type.json \
+knb_dict_path=../knb-dict-2024/$model/$data_type/${next_token}_target_new/$ff_attrs/bs$batch_size-p$p-$type.json
 # knb_dict_path=/root/knb_dict/test.json
 
 cnt=1
