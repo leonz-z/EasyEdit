@@ -6,14 +6,14 @@ export PYTHONUNBUFFERED=1
 # export CUDA_VISIBLE_DEVICES=1
 
 # # model
-# model=gpt-j-6b
-# ff_attrs=mlp.fc_out
+model=gpt-j-6b
+ff_attrs=mlp.fc_out
 
 # model=llama3-8b
-model=llama2-7b
+# model=llama2-7b
 # model=qwen1.5-7b
 # model=qwen2-7b
-ff_attrs=mlp.down_proj
+# ff_attrs=mlp.down_proj
 
 # model=qwen-7b
 # model=gpt2
@@ -26,7 +26,7 @@ knb_layer=last_layer
 # type=max 
 # p=99.9
 t_loss=0.7
-batch_size=20
+batch_size=30
 num_steps=100
 
 # dataset 
