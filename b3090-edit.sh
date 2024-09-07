@@ -7,7 +7,7 @@ export PYTHONUNBUFFERED=1
 
 # model
 model=gpt-j-6b
-ff_attrs=mlp.fc_out
+ff_attrs=mlp.fc_in
 
 # model=llama3-8b
 # model=llama2-7b
@@ -25,7 +25,7 @@ method=KNB
 type=max 
 p=99.9
 t_loss=1e-1
-batch_size=40
+batch_size=30
 num_steps=100
 
 # dataset 
@@ -54,4 +54,4 @@ CUDA_VISIBLE_DEVICES=$gpu nohup python examples/run_knowedit.py \
     --knb_dict_path $knb_dict_path \
     --hparams_dir ./hparams/KNB/$model.yaml \
     --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
-    > logs/$DATE/$i-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
+    > logs/$DATE/$gpu-$p-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$cnt.log 2>&1 &
