@@ -45,8 +45,8 @@ gpus=5
 cnt=1
 batch=$((885/$gpus))
 
-# type=mean 
-type=max
+type=mean 
+# type=max
 # t_loss
 # for t_loss in 1e-1 2e-1 3e-1 4e-1 5e-1 6e-1 7e-1 8e-1 9e-1 5e-2 1e-2 5e-3 1e-3; do
 # p
