@@ -35,6 +35,7 @@ class KNBHyperParams(HyperParams):
     bias: str = 'none'
     p: str = None
     t_loss: float = 1e-3
+    knb_layer: str = None # this_layer, last_layer
 
     @classmethod
     def from_hparams(cls, hparams_name_or_path: str):
