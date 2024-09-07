@@ -39,6 +39,7 @@ if __name__ == "__main__":
         parser.add_argument('--p', default=None, type=str)
         parser.add_argument('--knb_dict_path', default=None, type=str)
         parser.add_argument('--t_loss', default=None, type=float)
+        parser.add_argument('--knb_layer', default=None, type=str, choices=['this_layer', 'last_layer'])
 
         parser.add_argument('--metrics_save_dir', default='./knb_output/', type=str) 
         parser.add_argument('--hparams_dir', type=str, default='./hparams/KNB/Llama-2-7b-ms.yaml')
@@ -268,6 +269,8 @@ if __name__ == "__main__":
         hparams.lora_type = args.lora_type
     if args.t_loss is not None:
         hparams.t_loss = args.t_loss
+    if args.knb_layer is not None:
+        hparams.knb_layer = args.knb_layer
     # 保存文件名
     save_name = f'{args.data_type}_{args.editing_method}_{hparams.model_name.split("/")[-1]}'
     if args.layers is not None:
