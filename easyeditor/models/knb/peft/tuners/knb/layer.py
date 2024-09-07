@@ -381,6 +381,9 @@ def dispatch_default(
         if knb_config.knb_dict:
             kwargs["knb_dict"] = knb_config.knb_dict
             # print("knb_dict is added to kwargs")
+        # add knb_layer to kwargs 0907@lzc
+        if knb_config.knb_layer:
+            kwargs["knb_layer"] = knb_config.knb_layer
         new_module = Linear(target, adapter_name, **kwargs)
 
     return new_module
