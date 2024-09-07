@@ -46,6 +46,12 @@ class KnbLayer(BaseTunerLayer):
         self.merged_adapters = []
         self._caches: dict[str, Any] = {}
         self.kwargs = kwargs
+        # add knb_layer params 0907@lzc
+        if kwargs.get("knb_layer"):
+            self.knb_layer = kwargs.get("knb_layer")
+        else:
+            self.knb_layer = "last_layer"
+            print("Warning: knb_layer is not specified, set to last_layer by default")
 
         base_layer = self.get_base_layer()
         if isinstance(base_layer, nn.Linear):
@@ -86,7 +92,11 @@ class KnbLayer(BaseTunerLayer):
         # 知识神经元论文中的梯度归因方法,定位到的kn_idx是下一层的in_features
         # knb_W: [lenght, out_features] length -> in_features knb
         # DO: lzc@0904 3090之前的gpu不支持bf16,如v100
-        self.knb_W[adapter_name] = nn.Linear(length, self.out_features, bias=False)
+        # 0907@lzc 分别初始化last_layer和this_layer的knb_W
+        if self.knb_layer == "last_layer":
+            self.knb_W[adapter_name] = nn.Linear(length, self.out_features, bias=False)
+        elif self.knb_layer == "this_layer":
+            self.knb_W[adapter_name] = nn.Linear(self.in_features, length, bias=False)
         # self.knb_W[adapter_name] = nn.Linear(length, self.out_features, bias=False, dtype=torch.float16)
         if use_rsknb:
             self.scaling[adapter_name] = knb_alpha / math.sqrt(length)
@@ -313,7 +323,6 @@ class Linear(nn.Module, KnbLayer):
                 delta_weight = self.get_delta_weight(active_adapter)
                 delta_weight = delta_weight.to(dtype=weight.dtype)
                 weight.data -= delta_weight
-
 
     def forward(self, x: torch.Tensor, *args: Any, **kwargs: Any) -> torch.Tensor:
         self._check_forward_args(x, *args, **kwargs)
