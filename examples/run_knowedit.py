@@ -309,9 +309,9 @@ if __name__ == "__main__":
     print(f'hparams:\n{hparams}')
     # 保存结果
     if not os.path.exists(args.metrics_save_dir+'/log'):
-        os.makedirs(args.metrics_save_dir+'/log')
+        os.makedirs(args.metrics_save_dir+'/log', exist_ok=True)
     if not os.path.exists(args.metrics_save_dir+'/result'):
-        os.makedirs(args.metrics_save_dir+'/result')
+        os.makedirs(args.metrics_save_dir+'/result', exist_ok=True)
     # 编辑模型
     editor = BaseEditor.from_hparams(hparams)
     if hparams.batch_size == 1:
