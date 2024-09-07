@@ -18,4 +18,5 @@ target_modules: ['mlp.down_proj']
 bias: none # TODO:knb是否现实了,存疑?已经实现
 p: null # 通过命令行设置
 t_loss: 1e-2 # 有weight_decay和dropout这里设置为1e-3
+knb_layer: this_layer # last_layer
 bf16: true
