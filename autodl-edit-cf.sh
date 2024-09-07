@@ -26,7 +26,7 @@ knb_layer=last_layer
 # type=max 
 # p=99.9
 t_loss=0.7
-batch_size=30
+batch_size=20
 num_steps=100
 
 # dataset 
