@@ -208,6 +208,16 @@ class KnbConfig(PeftConfig):
                 "kn_dict:key2=layer_idx, value2=kn_idx_list")
         }
     )
+    
+    # add param knb_layer 0907@lzc
+    knb_layer: Literal["last_layer", "this_layer"] = field(
+        default="last_layer",
+        metadata={
+            "help": (
+                "knb idx from which layer, can be 'last_layer' or 'this_layer'."
+            )
+        }
+    )
     def __post_init__(self):
         self.peft_type = PeftType.KNB
         self.target_modules = (
