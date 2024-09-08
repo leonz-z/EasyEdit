@@ -320,6 +320,7 @@ class BaseEditor:
         assert len(prompts) == len(target_new)
         # assert BatchEditor.is_batchable_method(self.alg_name), f'The Method {self.alg_name} can not batch edit examples.'
         assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
+        assert self.hparams.batch_size >1 and isinstance(knb_dict_list, list), f'knb_dict_list should be a list with batch_size greater than 1'
         eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
         test_generation = kwargs['test_generation'] if 'test_generation' in kwargs.keys() else False
         if ground_truth is not None:
