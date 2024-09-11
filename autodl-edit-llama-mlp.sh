@@ -54,7 +54,7 @@ for n in 200 400 600 800; do
         --start_idx_end_idx $start_idx_end_idx \
         --knb_dict_path $knb_dict_path \
         --hparams_dir ./hparams/KNB/$model.yaml \
-        --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
+        --pre_file ./pre_edit/${model}_${data_type}_pre_edit_${start_idx_end_idx}.json \
         > logs/$DATE/$gpu-$p-$n-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$knb_layer-$cnt.log 2>&1 &
     done
     wait
