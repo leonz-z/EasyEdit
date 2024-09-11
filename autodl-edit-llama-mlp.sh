@@ -32,6 +32,7 @@ batch=$((885/$gpus))
 model=llama2-7b-chat
 batch_size=10 
 t_loss=0.4
+start_idx_end_idx=0,885
 # for p in 90 92 94 96 98; do
 p=90
 for n in 200 400 600 800; do
@@ -54,7 +55,7 @@ for n in 200 400 600 800; do
         --start_idx_end_idx $start_idx_end_idx \
         --knb_dict_path $knb_dict_path \
         --hparams_dir ./hparams/KNB/$model.yaml \
-        --pre_file ./pre_edit/${model}_${data_type}_pre_edit_${start_idx_end_idx}.json \
+        --pre_file ./pre_edit/${model}_${data_type}_pre_edit.json \
         > logs/$DATE/$gpu-$p-$n-$ff_attrs-$t_loss-$start_idx_end_idx-$method-bs$batch_size-epoch$num_steps-$data_type-$type-$model-$knb_layer-$cnt.log 2>&1 &
     done
     wait
