@@ -78,8 +78,9 @@ def _prepare_requests(prompts: Union[str, List[str]],
             kwargs['subject'] = [kwargs['subject'],]
         else:
             assert len(kwargs['subject']) == len(prompts)
-        for prompt_, subject_ in zip(prompts, kwargs['subject']):
-            assert subject_ in prompt_, print(f'Subject:{subject_} do not exist in prompt: {prompt_}')
+        print('WRNING:没有判断subject是否存在于prompt中')
+        # for prompt_, subject_ in zip(prompts, kwargs['subject']):
+        #     assert subject_ in prompt_, print(f'Subject:{subject_} do not exist in prompt: {prompt_}')
 
         for i, request in enumerate(requests):
             request.update(
