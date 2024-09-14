@@ -294,11 +294,10 @@ if __name__ == "__main__":
         save_name = f'{save_name}_rs{hparams.use_rslora}_a{hparams.lora_alpha}'
         save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
-        # knb_dict_path=/root/autodl-fs/knb-dict-2024/$model/$data_type/$knb_layer/bs$batch_size-p$p-$type.json
-        knb_save_path = args.knb_dict_path.replace('knb-dict-bs', 'knb-output').replace('.json', '')
+        knb_save_path = f'/root/autodl-fs/knb-output/{hparams.model_name}/{args.data_type}/{args.knb_layer}'
         print(f"knb_save_path: {knb_save_path}")
         args.metrics_save_dir = knb_save_path
-        save_name = f"{args.start_idx_end_idx}_{args.target_modules}_{args.num_steps}"
+        save_name = f"{args.start_idx_end_idx}_{args.target_modules}_bs{hparams.batch_size}"
         save_name = f'{save_name}_rs{hparams.use_rsknb}_a{hparams.knb_alpha}'
         save_name = f'{save_name}_pd{hparams.knb_dropout}_bias_{hparams.bias}_t_loss{hparams.t_loss}'
         save_name = f'{save_name}_wd{hparams.weight_decay}'
