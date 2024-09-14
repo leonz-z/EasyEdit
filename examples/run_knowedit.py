@@ -294,7 +294,7 @@ if __name__ == "__main__":
         save_name = f'{save_name}_rs{hparams.use_rslora}_a{hparams.lora_alpha}'
         save_name = f'{save_name}_b_{hparams.bias}_tr{hparams.target_r}_ir{hparams.init_r}'
     elif args.editing_method == 'KNB':
-        knb_save_path = f'/root/autodl-fs/knb-output/{hparams.model_name}/{args.data_type}/{args.knb_layer}'
+        knb_save_path = f'/root/autodl-fs/knb-output/{hparams.model_name}/{args.data_type}/{args.knb_layer}/{args.knb_dict_path.split("/")[-1].replace(".json", "")}'
         print(f"knb_save_path: {knb_save_path}")
         args.metrics_save_dir = knb_save_path
         save_name = f"{args.start_idx_end_idx}_{args.target_modules}_bs{hparams.batch_size}"
