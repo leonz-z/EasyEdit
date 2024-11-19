@@ -1379,7 +1379,7 @@ def test_KN_Baichuan():
     import pdb
     pdb.set_trace()
 
-    return metrics, edited_model    
+    return metrics, edited_model
 
 
 def test_IKE_Baichuan():
@@ -1601,7 +1601,7 @@ def test_KN_ChatGLM():
     import pdb
     pdb.set_trace()
 
-    return metrics, edited_model 
+    return metrics, edited_model
 
 
 def test_FT_ChatGLM():

@@ -7,7 +7,7 @@
 # ff_attrs=mlp.up_proj mlp.down_proj mlp.up_proj,mlp.gate_proj,mlp.down_proj （mlp）
 DATE=$(date +"%Y-%m-%d")
 mkdir -p logs/$DATE
-source activate base
+source activate ccks2024
 export HUGGINGFACE_CACHE=/root/autodl-fs/
 export PYTHONUNBUFFERED=1
 # export CUDA_VISIBLE_DEVICES=1

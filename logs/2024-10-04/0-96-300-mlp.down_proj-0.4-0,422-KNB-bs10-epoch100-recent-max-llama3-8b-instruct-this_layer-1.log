@@ -1,0 +1,57 @@
+add module root path: /home/yantao/llm2024/EasyEdit
+/home/yantao/miniconda3/envs/ccks2024/lib/python3.9/site-packages/torchvision/io/image.py:13: UserWarning: Failed to load image Python extension: '/home/yantao/miniconda3/envs/ccks2024/lib/python3.9/site-packages/torchvision/image.so: undefined symbol: _ZN3c1017RegisterOperatorsD1Ev'If you don't plan on using image functionality from `torchvision.io`, you can ignore this warning. Otherwise, there might be something wrong with your environment. Did you have `libjpeg` or `libpng` installed before building `torchvision` from source?
+  warn(
+target_modules: ['mlp.down_proj']
+knb_save_path: /home/yantao/llm2024/EasyEdit/knb_output/llama3-8b-instruct/recent/this_layer/n300-p96-max
+save_name: 0,422_mlp.down_proj_bs10_rsTrue_a1_pd0_bias_none_t_loss0.4_wd0
+hparams:
+KNBHyperParams(layers=[], num_steps=100, lr=0.005, weight_decay=0, kl_factor=0, norm_constraint=False, target_modules=['mlp.down_proj'], knb_alpha=1, knb_dropout=0, device=0, alg_name='KNB', model_name='llama3-8b-instruct', batch_size=10, max_length=30, model_parallel=True, bf16=True, fp16=False, use_rsknb=True, bias='none', p=None, t_loss=0.4, knb_layer='this_layer')
+2024-10-04 09:41:54,840 - easyeditor.editors.editor - INFO - Instantiating model
+10/04/2024 09:41:54 - INFO - easyeditor.editors.editor -   Instantiating model
+Using Huggingface cache: /share/huggingface/llama3-8b-instruct
+2024-10-04 09:41:54,840 - easyeditor.editors.editor - INFO - Using device:auto torch_dtype:torch.bfloat16
+10/04/2024 09:41:54 - INFO - easyeditor.editors.editor -   Using device:auto torch_dtype:torch.bfloat16
+10/04/2024 09:41:55 - INFO - accelerate.utils.modeling -   We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:22<01:07, 22.53s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:45<00:45, 22.69s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [01:07<00:22, 22.50s/it]Loading checkpoint shards: 100%|██████████| 4/4 [01:12<00:00, 15.74s/it]Loading checkpoint shards: 100%|██████████| 4/4 [01:12<00:00, 18.24s/it]
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+2024-10-04 09:43:08,974 - easyeditor.editors.editor - INFO - knb_dict_list: <class 'dict'> len(knb_dict_list): 2 batch_size: 10
+10/04/2024 09:43:08 - INFO - easyeditor.editors.editor -   knb_dict_list: <class 'dict'> len(knb_dict_list): 2 batch_size: 10
+WRNING:没有判断subject是否存在于prompt中
+  0%|          | 0/42 [00:00<?, ?it/s]10/04/2024 09:43:10 - INFO - easyeditor.models.knb.peft.tuners.knb.model -   _mark_only_adapters_as_trainable
+trainable params: 75,163,648 || all params: 8,105,424,896 || trainable%: 0.9273252045934447
+Executing KNB algo for: [The place of death of Leo Arons is] -> [Berlin]
+Executing KNB algo for: [The place of birth of Bob Edmond is] -> [Scotland]
+Executing KNB algo for: [The name of the author of Laws of Illinois relating to Canada thistles .. is] -> [Illinois]
+Executing KNB algo for: [The name of the field of work of S. L. Peshtich is] -> [history]
+Executing KNB algo for: [The names of the siblings of Maria Anna of Bavaria are] -> [Princess Ludovika, Duchess in Bavaria]
+Executing KNB algo for: [The name of the country of citizenship of Pierre de Bané is] -> [Canada]
+Executing KNB algo for: [The sexual orientation of Leslie Ann Lorimer is] -> [lesbianism]
+Executing KNB algo for: [The place of birth of Bonnie Horwood is] -> [England]
+Executing KNB algo for: [The name of the religion which Church of the Holy Body of Christ is associated with is] -> [Catholicism]
+Executing KNB algo for: [The name of the position held by Géza Révész is] -> [Minister of Defence of Hungary]
+Using device: cuda:0
+Epoch: 0 Asking to truncate to max_length but no maximum length is provided and the model has no predefined maximum length. Default to no truncation.
+Batch loss 4.634246349334717
+Epoch: 1 Batch loss 1.5889571905136108
+Epoch: 2 Batch loss 1.0946067571640015
+Epoch: 3 Batch loss 0.42835357785224915
+Epoch: 4 Batch loss 0.3173271715641022
+Epoch: 4 Batch loss 0.3173271715641022 < 0.4
+2024-10-04 09:43:14,729 - easyeditor.editors.editor - INFO - Execution editing took 5.752432107925415
+10/04/2024 09:43:14 - INFO - easyeditor.editors.editor -   Execution editing took 5.752432107925415
+2024-10-04 09:43:24.557066: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2024-10-04 09:43:24.876102: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:485] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2024-10-04 09:43:24.992240: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:8454] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2024-10-04 09:43:25.023599: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1452] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2024-10-04 09:43:25.241467: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2024-10-04 09:43:26.781178: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+  0%|          | 0/42 [00:19<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/yantao/llm2024/EasyEdit/examples/run_knowedit.py", line 400, in <module>
+    metrics = editor.batch_edit_knb(
+  File "/home/yantao/llm2024/EasyEdit/easyeditor/editors/editor.py", line 376, in batch_edit_knb
+    edit_evaluation(all_metrics, request, edited_model, new_idx, eval_metric, test_generation)
+  File "/home/yantao/llm2024/EasyEdit/easyeditor/editors/editor.py", line 310, in edit_evaluation
+    locality_result.append(np.mean(np.equal(ans, label)))
+ValueError: operands could not be broadcast together with shapes (3,) (4,) 
